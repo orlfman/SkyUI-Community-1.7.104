@@ -54,5 +54,6 @@ This repo follows [Conventional Commits](https://www.conventionalcommits.org/), 
 - [SkyUI Community](https://github.com/doodlum/SkyUI-Community), maintained by doodlum and its contributors.
 - The SKSE team.
 - [JPEXS Free Flash Decompiler](https://github.com/jindrapetrik/jpexs-decompiler), used to work with the menu files.
+- Claude Fable 5.2 and GPT-6 Astra
 
 This is an unofficial fork, not an official SkyUI Community release.
