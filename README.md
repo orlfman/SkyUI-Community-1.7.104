@@ -38,9 +38,15 @@ That's a test on one setup. Gamepad controls, a fresh New Game, and the MCM cont
 
 If something looks wrong, [open an issue](https://github.com/orlfman/SkyUI-Community-1.7.104/issues) with your Skyrim and SKSE versions, the menu involved, and any other UI mods you use. A screenshot and steps to reproduce it help.
 
-## Building and contributing
+## Contributing
 
-[Build instructions are here](BUILDING.md). Fixes and reports are welcome. Please file issues for this port here so they don't get mixed in with upstream SkyUI Community reports.
+Found a bug or have a fix? [Open an issue](https://github.com/orlfman/SkyUI-Community-1.7.104/issues) or send a pull request here. Please keep reports about this port in this repo so they don't get mixed in with upstream SkyUI Community reports.
+
+For code changes, fork this repo and make a branch from `port/skyrim-1.7.104`. The [build instructions](BUILDING.md) cover getting it running locally. Build your changes, try them in game, then open a pull request against `port/skyrim-1.7.104` with a short explanation of what you changed and what you tested.
+
+### Commit messages
+
+This repo follows [Conventional Commits](https://www.conventionalcommits.org/), like `fix: correct the save menu selection` or `docs: clarify installation`.
 
 ## Credits
 
