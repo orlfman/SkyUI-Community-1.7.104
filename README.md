@@ -1,121 +1,52 @@
-# SkyUI SE Community Update (6.0+)
+# SkyUI Community for Skyrim 1.7.104
 
-> **Branch `port/skyrim-1.7.104`:** menus rebased onto Skyrim SE 1.7.104 (the Switch 2
-> unification update) and built against SKSE64 2.3.1. See [PORT-1.7.104.md](PORT-1.7.104.md).
+This is a port of [SkyUI Community 6.11](https://github.com/doodlum/SkyUI-Community) for **Skyrim SE 1.7.104 and SKSE64 2.3.1**.
 
-## Building
+I made this for my own setup after updating Skyrim. It keeps the SkyUI inventory, favorites and MCM, with the menus updated to match the files shipped with 1.7.104. The work here builds on SkyUI Community; credit for SkyUI itself goes to the original team and the community contributors.
 
-### Prerequisites
+**[Download SkyUI-Community-1.7.104](https://github.com/orlfman/SkyUI-Community-1.7.104/releases/latest)**
 
-- [CMake 4.2+](https://cmake.org/download/)
-- [Visual Studio 2026](https://visualstudio.microsoft.com/) (or another CMake-supported generator; on Linux, the default make generator is used)
-- [Java](https://www.java.com/en/download/) (required by the bundled ffdec-cli)
-- [Proton](https://github.com/ValveSoftware/Proton) *(Linux only)* — auto-detected from your Steam installation. Skyrim SE must have been launched via Steam at least once to create the Proton prefix.
-- A clean Skyrim Special Edition installation with:
-  - The [Creation Kit](https://store.steampowered.com/app/1946180/Skyrim_Special_Edition_Creation_Kit/) installed and **run at least once** to unpack the base game script sources
-  - The latest [SKSE64](https://skse.silverlock.org/) installed, including its script source files, overwriting the scripts included with the Creation Kit
-  - No other mods or tools overwriting the base game or SKSE script sources
+## Requirements
 
-### Setup
+- Skyrim Special Edition **1.7.104**
+- **SKSE64 2.3.1**, including its scripts
 
-Clone the repository with submodules:
+You don't need the Creation Kit or any build tools to install the release.
 
-```
-git clone --recursive https://github.com/doodlum/SkyUI-Community.git
-```
+## Installation
 
-If you already cloned without `--recursive`, initialize the submodules with:
+1. Download **SkyUI-Community-1.7.104.zip** from the releases page. Choose the mod ZIP, not GitHub's source code downloads.
+2. Install it with your mod manager and enable **SkyUI_SE.esp**.
+3. Disable your previous SkyUI installation if you have one. This download is the complete mod, not a patch to stack on top of another version.
+4. Launch Skyrim through SKSE.
 
-```
-git submodule update --init
-```
+If you use other interface mods, check which menus they replace. Loose SWF files can override the menus in SkyUI's BSA, even when SkyUI appears later in your mod manager.
 
-The build system expects Papyrus script sources at the following locations within your Skyrim SE game directory:
+## What's changed?
 
-| Path | Contents |
-|------|----------|
-| `Data/Source/Scripts/` | Base game and Creation Kit script sources (`TESV_Papyrus_Flags.flg`, `Debug.psc`, `Form.psc`, etc.) |
-| `Data/Scripts/Source/` | SKSE64 script sources (`UI.psc`, `StringUtil.psc`, `SKSE.psc`, etc.) |
+The main menu, journal, save/load screens and other menus have been updated using Skyrim 1.7.104's own interface files, while keeping SkyUI's changes. That includes the newer menu calls and button handling, plus the quantity slider notification in barter menus.
 
-### Building
+The Papyrus sources are unchanged from SkyUI Community. They've been rebuilt using the SKSE 2.3.1 script sources.
 
-The easiest way to build is to double-click `Build.bat`. It will automatically detect your Skyrim SE installation via the Steam registry. If auto-detection fails, it will prompt you to enter the path manually.
+For the code-level details, see [the port notes](PORT-1.7.104.md).
 
-You can also set the `SkyrimSE_PATH` environment variable beforehand to skip the prompt:
+## Testing
 
-```
-set SkyrimSE_PATH=C:\Program Files (x86)\Steam\steamapps\common\Skyrim Special Edition
-```
-For convenient debugging, use `MOD_DEBUG_PATH`. `.swf` and `.pex` files will be placed in the specified path. If you only modify the `.swf`, you can test them without exiting the game. Skyrim's interface features "hot reloading." If you are already sitting in the modified menu, open it again to see the changes.
-```
-set MOD_DEBUG_PATH="C:\Users\user\AppData\Local\ModOrganizer\Skyrim Special Edition\mods\SkyUI_Test"
-```
+I've used this on Skyrim 1.7.104 with SKSE 2.3.1 through MO2 on Linux with Proton. The menus I tried looked right, loading and saving worked, and the session logs showed SkyUI starting up without a recorded crash.
 
-Alternatively, from the command line:
+That's a test on one setup. Gamepad controls, a fresh New Game, and the MCM contents haven't been checked separately. Windows hasn't been tested here, and I haven't tested older Skyrim versions or VR.
 
-```
-cmake --preset debug
-cmake --build --preset debug
-```
+If something looks wrong, [open an issue](https://github.com/orlfman/SkyUI-Community-1.7.104/issues) with your Skyrim and SKSE versions, the menu involved, and any other UI mods you use. A screenshot and steps to reproduce it help.
 
-### Building on Linux
+## Building and contributing
 
-The easiest way to build is to run `./build.sh`. It will automatically detect your Skyrim SE installation from your Steam library. If auto-detection fails, it will prompt you to enter the path manually.
-
-You can also set the `SkyrimSE_PATH` environment variable beforehand to skip the prompt:
-
-```bash
-export SkyrimSE_PATH="$HOME/.local/share/Steam/steamapps/common/Skyrim Special Edition"
-```
-
-For convenient debugging, use `MOD_DEBUG_PATH`:
-
-```bash
-export MOD_DEBUG_PATH="$HOME/.local/share/ModOrganizer/Skyrim Special Edition/mods/SkyUI-dev"
-```
-
-Alternatively, from the command line (ensure `SkyrimSE_PATH` is exported first):
-
-```bash
-cmake --preset debug
-cmake --build --preset debug
-```
-
-Optional environment variables (or `-D` cache variables) for non-default setups:
-
-| Variable | Purpose |
-|----------|---------|
-| `CreationKit_PATH` | Folder with `Papyrus Compiler/` and `Data/Source/Scripts/` when the Creation Kit is installed apart from the game (e.g. in another Steam library). Defaults to `SkyrimSE_PATH`. SKSE64 sources are still read from `SkyrimSE_PATH/Data/Scripts/Source/`. |
-| `PROTON_WINE` | Wine binary used for the Windows build tools, e.g. `.../GE-Proton11-11/files/bin/wine`. |
-| `WINEPREFIX_PATH` | Wine prefix for those tools. Defaults to the game's Steam prefix; point it at an empty folder to keep the build out of the game's prefix. |
-
-### Output
-
-The build produces `build/release/SkyUI_SE-<version>.zip` containing:
-
-- `SkyUI_SE.esp` - Plugin file
-- `SkyUI_SE.bsa` - Archive containing compiled Papyrus scripts and all interface files
-
-For release use the following command lines:
-
-```
-cmake --preset release
-cmake --build --preset release
-```
-
-## Contributing
-
-Contributions are welcome! If you'd like to submit a bug fix or add new functionality, please follow these steps:
-
-1. **Fork** the repository and create a new branch from `main`.
-2. **Make your changes** — ensure they build successfully using the steps above.
-3. **Test** your changes in-game to verify they work as expected.
-4. **Open a pull request** against `main` with a clear description of what you changed and why.
-
-### Commit Messages
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/).
+[Build instructions are here](BUILDING.md). Fixes and reports are welcome. Please file issues for this port here so they don't get mixed in with upstream SkyUI Community reports.
 
 ## Credits
 
-- [JPEXS Free Flash Decompiler](https://github.com/jindrapetrik/jpexs-decompiler) by Jindra Petřík — used for ActionScript and XML compilation into SWF files
+- The original SkyUI team.
+- [SkyUI Community](https://github.com/doodlum/SkyUI-Community), maintained by doodlum and its contributors.
+- The SKSE team.
+- [JPEXS Free Flash Decompiler](https://github.com/jindrapetrik/jpexs-decompiler), used to work with the menu files.
+
+This is an unofficial fork, not an official SkyUI Community release.

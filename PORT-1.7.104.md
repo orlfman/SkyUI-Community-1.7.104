@@ -46,7 +46,11 @@ designs and were compared with 1.7.104 only at the engine boundary (callbacks,
 
 ## Not done / not verified
 
-- Not tested in game.
+- Initial in-game test on Skyrim 1.7.104 / SKSE64 2.3.1 through MO2 and Proton:
+  menus used looked correct, existing-save loading and saving worked, and the logs
+  showed SkyUI registrations and HUD widget loading without a recorded crash.
+  This was one setup, not an exhaustive menu test. Gamepad input, a fresh New Game,
+  MCM contents, Windows, older runtimes and VR remain unverified.
 - `data/interface/*.swf` (reference copies of older vanilla menus) are untouched.
 - `SetSaveDisabled` keeps upstream's argument list; vanilla's own call has the same
   shape in 1.6.1170 and 1.7.104.
