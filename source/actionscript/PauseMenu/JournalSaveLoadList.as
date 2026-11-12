@@ -2,6 +2,7 @@ class JournalSaveLoadList extends Shared.BSScrollingList
 {
    var ListScrollbar;
    var iMaxScrollPosition;
+   var selectedIndex;
    function JournalSaveLoadList()
    {
       super();
@@ -35,12 +36,20 @@ class JournalSaveLoadList extends Shared.BSScrollingList
    }
    function moveSelectionUp()
    {
+      var _loc3_ = this.selectedIndex;
       super.moveSelectionUp();
-      gfx.io.GameDelegate.call("PlaySound",["UIMenuFocus"]);
+      if(_loc3_ != this.selectedIndex)
+      {
+         gfx.io.GameDelegate.call("PlaySound",["UIMenuFocus"]);
+      }
    }
    function moveSelectionDown()
    {
+      var _loc3_ = this.selectedIndex;
       super.moveSelectionDown();
-      gfx.io.GameDelegate.call("PlaySound",["UIMenuFocus"]);
+      if(_loc3_ != this.selectedIndex)
+      {
+         gfx.io.GameDelegate.call("PlaySound",["UIMenuFocus"]);
+      }
    }
 }

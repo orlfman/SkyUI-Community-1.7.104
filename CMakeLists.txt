@@ -39,6 +39,18 @@ if(NOT DEFINED SkyrimSE_PATH OR SkyrimSE_PATH STREQUAL "")
     set(SkyrimSE_PATH "${_SKYRIMSE_DEFAULT}" CACHE PATH "Path to Skyrim Special Edition installation")
 endif()
 
+# CreationKit_PATH: directory holding "Papyrus Compiler/" and the base game script
+# sources (Data/Source/Scripts). Defaults to SkyrimSE_PATH; set it when the Creation
+# Kit is installed apart from the game (e.g. in another Steam library).
+if(NOT DEFINED CreationKit_PATH OR CreationKit_PATH STREQUAL "")
+    if(DEFINED ENV{CreationKit_PATH} AND NOT "$ENV{CreationKit_PATH}" STREQUAL "")
+        set(CreationKit_PATH "$ENV{CreationKit_PATH}")
+    else()
+        set(CreationKit_PATH "${SkyrimSE_PATH}")
+    endif()
+endif()
+set(CreationKit_PATH "${CreationKit_PATH}" CACHE PATH "Path to the Creation Kit (Papyrus compiler + base script sources)")
+
 # Build type setup
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose build type: Debug or Release" FORCE)
@@ -115,7 +127,7 @@ if(PAPYRUS_SOURCES)
 
     # Set by LinuxTools.cmake on Linux; falls back to the game dir on other platforms.
     if(NOT DEFINED _PAPYRUS_GAME_DIR OR _PAPYRUS_GAME_DIR STREQUAL "")
-        set(_PAPYRUS_GAME_DIR "${SkyrimSE_PATH}")
+        set(_PAPYRUS_GAME_DIR "${CreationKit_PATH}")
     endif()
 
     Papyrus_Add(
@@ -125,7 +137,7 @@ if(PAPYRUS_SOURCES)
         IMPORTS
             "${CMAKE_CURRENT_SOURCE_DIR}/source/scripts"
             "${SkyrimSE_PATH}/Data/Scripts/Source"
-            "${SkyrimSE_PATH}/Data/Source/Scripts"
+            "${CreationKit_PATH}/Data/Source/Scripts"
         SOURCES ${PAPYRUS_SOURCES}
         # OPTIMIZE
         ANONYMIZE

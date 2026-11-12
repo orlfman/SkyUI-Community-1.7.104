@@ -75,6 +75,7 @@ class StartMenu extends MovieClip
    static var QUIT_INDEX = 9;
    static var HELP_INDEX = 10;
    static var PS5_DATA_TRANSFER_INDEX = 11;
+   static var OUNCE_DATA_TRANSFER_INDEX = 12;
    static var LOADING_ICON_OFFSET = 50;
    static var DISABLED_GREY_OUT_ALPHA = 50;
    var PS3Switch = false;
@@ -85,9 +86,12 @@ class StartMenu extends MovieClip
    static var PLATFORM_ORBIS = 3;
    static var PLATFORM_SCARLETT = 4;
    static var PLATFORM_PROSPERO = 5;
+   static var PLATFORM_NX = 6;
+   static var PLATFORM_NX_MOUSE = 7;
    static var ALPHA_AVAILABLE = 100;
    static var ALPHA_DISABLED = 50;
    static var OUT_OF_THE_STAGE = -10000;
+   var firstExitedMenu = false;
    var _Margin = 60;
    var _UserCanAccessCreationClub = true;
    var _CClubAllowedByBnet = true;
@@ -203,6 +207,8 @@ class StartMenu extends MovieClip
       gfx.io.GameDelegate.addCallBack("DoneLoadingDLC",this,"DoneLoadingDLC");
       gfx.io.GameDelegate.addCallBack("ShowGamerTagAndIcon",this,"ShowGamerTagAndIcon");
       gfx.io.GameDelegate.addCallBack("OnDeleteSaveUISanityCheck",this,"OnDeleteSaveUISanityCheck");
+      gfx.io.GameDelegate.addCallBack("SetFirstExitedMenu",this,"SetFirstExitedMenu");
+      gfx.io.GameDelegate.addCallBack("ExitJoyConStrapInstructionScreen",this,"ExitJoyConStrapInstructionScreen");
       gfx.io.GameDelegate.addCallBack("OnSaveDataEventLoadSUCCESS",this,"OnSaveDataEventLoadSUCCESS");
       gfx.io.GameDelegate.addCallBack("OnSaveDataEventLoadCANCEL",this,"OnSaveDataEventLoadCANCEL");
       gfx.io.GameDelegate.addCallBack("onStartButtonProcessFinished",this,"onStartButtonProcessFinished");
@@ -253,6 +259,7 @@ class StartMenu extends MovieClip
       var _loc18_ = 11;
       var _loc17_ = 12;
       var _loc6_ = 13;
+      var _loc19_ = 14;
       var _loc4_ = StartMenu.NEW_INDEX;
       if(this.MainList.entryList.length > 0)
       {
@@ -274,6 +281,10 @@ class StartMenu extends MovieClip
       {
          this.MainList.entryList.push({text:"$TRANSFER DATA",index:StartMenu.PS5_DATA_TRANSFER_INDEX,disabled:false,showIcon:false});
       }
+      if(arguments[_loc19_] && this.IsPlatformNintendo())
+      {
+         this.MainList.entryList.push({text:"$TRANSFER DATA",index:StartMenu.OUNCE_DATA_TRANSFER_INDEX,disabled:false,showIcon:false});
+      }
       if(arguments[_loc16_] == true)
       {
          this.MainList.entryList.push({text:"$DOWNLOADABLE CONTENT",index:StartMenu.DLC_INDEX,disabled:false,showIcon:false});
@@ -292,7 +303,7 @@ class StartMenu extends MovieClip
       if(!arguments[_loc15_])
       {
       }
-      if(arguments[_loc9_] && skse.version.releaseIdx >= 70)
+      if(arguments[_loc9_] && skse.version.releaseIdx >= 70 && this.iPlatform != StartMenu.PLATFORM_NX && this.iPlatform != StartMenu.PLATFORM_NX_MOUSE)
       {
          this.MainList.entryList.push({text:"$MOD MANAGER",disabled:false,index:StartMenu.MOD_INDEX,showIcon:false});
       }
@@ -321,7 +332,7 @@ class StartMenu extends MovieClip
       {
          if(arguments[_loc14_])
          {
-            this.StartState(StartMenu.PRESS_START_STATE);
+            this.ShowPressStartState();
          }
          else if(this._NeedsLoginScreen)
          {
@@ -366,6 +377,41 @@ class StartMenu extends MovieClip
       aTargetClip._width = this.GamerIconSize;
       aTargetClip._height = this.GamerIconSize;
    }
+   function ShowJoyConStrapInstructionScreen()
+   {
+      gfx.io.GameDelegate.call("myLog",["ShowJoyConStrapInstructionScreen"]);
+      this.firstExitedMenu = true;
+      gfx.io.GameDelegate.call("ActivateJoyConStrapInstruction",[]);
+   }
+   function ExitJoyConStrapInstructionScreen()
+   {
+      gfx.io.GameDelegate.call("myLog",["StartMenu::ExitJoyConStrapInstructionScreen"]);
+      if(this.strCurrentState == StartMenu.MAIN_CONFIRM_STATE)
+      {
+         this._visible = false;
+         if(this.MainList.selectedEntry.index == StartMenu.NEW_INDEX)
+         {
+            this.FadeOutAndCall("StartNewGame");
+         }
+         else if(this.MainList.selectedEntry.index == StartMenu.CONTINUE_INDEX)
+         {
+            this.FadeOutAndCall("ContinueLastSavedGame");
+         }
+      }
+      else if(this.strCurrentState == StartMenu.SAVE_LOAD_CONFIRM_STATE)
+      {
+         this._visible = false;
+         this.FadeOutAndCall("LoadGame",[this.SaveLoadListHolder.selectedIndex]);
+      }
+      else if(this.strCurrentState == undefined)
+      {
+         this.StartState(StartMenu.PRESS_START_STATE);
+      }
+   }
+   function SetFirstExitedMenu(aFirstExitedMenu)
+   {
+      this.firstExitedMenu = aFirstExitedMenu;
+   }
    function OnDeleteSaveUISanityCheck(aHasRecentSave, aCanLoadGame)
    {
       var _loc8_ = false;
@@ -405,6 +451,10 @@ class StartMenu extends MovieClip
    function ShowCharacterSelectionHint(abFlag)
    {
       this.CharacterSelectionHint._visible = false;
+      if(this.IsPlatformNintendo())
+      {
+         this.CharacterSelectionHint._visible = abFlag;
+      }
    }
    function ShowSky10UpsellBanner(abFlag)
    {
@@ -438,6 +488,7 @@ class StartMenu extends MovieClip
       if(strNewState == StartMenu.MAIN_STATE)
       {
          this.MainList.disableSelection = false;
+         gfx.io.GameDelegate.call("FirstTimeOunceDataTransferCheck",[]);
       }
       if(strNewState != this.strCurrentState)
       {
@@ -470,7 +521,7 @@ class StartMenu extends MovieClip
       var _loc5_;
       var _loc4_;
       var _loc3_;
-      if(this.IsPlatformSony() && this.currentState == StartMenu.PRESS_START_STATE)
+      if((this.IsPlatformSony() || this.iPlatform == StartMenu.PLATFORM_NX || this.iPlatform == StartMenu.PLATFORM_NX_MOUSE) && this.currentState == StartMenu.PRESS_START_STATE)
       {
          if(Shared.GlobalFunc.IsKeyPressed(details))
          {
@@ -647,7 +698,7 @@ class StartMenu extends MovieClip
    }
    function onMainButtonPress(event)
    {
-      if(this.strCurrentState == StartMenu.MAIN_STATE || this.iPlatform == 0)
+      if(this.strCurrentState == StartMenu.MAIN_STATE || this.iPlatform == 0 || this.iPlatform == 7)
       {
          switch(event.entry.index)
          {
@@ -675,6 +726,10 @@ class StartMenu extends MovieClip
                break;
             case StartMenu.PS5_DATA_TRANSFER_INDEX:
                gfx.io.GameDelegate.call("OnPS5DataTransfer",[]);
+               gfx.io.GameDelegate.call("PlaySound",["UIMenuOK"]);
+               return;
+            case StartMenu.OUNCE_DATA_TRANSFER_INDEX:
+               gfx.io.GameDelegate.call("OnOunceDataTransfer",[]);
                gfx.io.GameDelegate.call("PlaySound",["UIMenuOK"]);
                return;
             case StartMenu.DLC_INDEX:
@@ -783,13 +838,13 @@ class StartMenu extends MovieClip
    }
    function SetPlatform(aiPlatform, abPS3Switch)
    {
-      this.ButtonRect.AcceptGamepadButton._visible = aiPlatform != 0;
-      this.ButtonRect.CancelGamepadButton._visible = aiPlatform != 0;
-      this.ButtonRect.AcceptMouseButton._visible = aiPlatform == 0;
-      this.ButtonRect.CancelMouseButton._visible = aiPlatform == 0;
+      this.ButtonRect.AcceptGamepadButton._visible = aiPlatform != 0 && aiPlatform != 7;
+      this.ButtonRect.CancelGamepadButton._visible = aiPlatform != 0 && aiPlatform != 7;
+      this.ButtonRect.AcceptMouseButton._visible = aiPlatform == 0 || aiPlatform == 7;
+      this.ButtonRect.CancelMouseButton._visible = aiPlatform == 0 || aiPlatform == 7;
       this._Sky10UpSell.SetPlatform(aiPlatform,abPS3Switch);
       var _loc4_ = this.DeleteSaveButton._visible;
-      if(aiPlatform == StartMenu.PLATFORM_PC_KBMOUSE)
+      if(aiPlatform == StartMenu.PLATFORM_PC_KBMOUSE || aiPlatform == StartMenu.PLATFORM_NX_MOUSE)
       {
          this.DeleteSaveButton._visible = false;
          this.DeleteMouseButton.label = this.DeleteSaveButton.label;
@@ -799,7 +854,7 @@ class StartMenu extends MovieClip
          this.DeleteSaveButton.onPress = Shared.Proxy.create(this,this.onMouseButtonDeleteSaveClick);
          this.DeleteSaveButton.addEventListener("rollOver",Shared.Proxy.create(this,this.onMouseButtonDeleteRollOver));
       }
-      else if(aiPlatform == StartMenu.PLATFORM_PC_GAMEPAD && this.DeleteSaveButton == this.DeleteMouseButton)
+      else if((aiPlatform == StartMenu.PLATFORM_PC_GAMEPAD || aiPlatform == StartMenu.PLATFORM_NX) && this.DeleteSaveButton == this.DeleteMouseButton)
       {
          this.DeleteSaveButton._visible = false;
          this.DeleteSaveButton = this.DeleteButton;
@@ -814,11 +869,16 @@ class StartMenu extends MovieClip
       this.DeleteSaveButton.SetPlatform(aiPlatform,abPS3Switch);
       this.ChangeUserButton.SetPlatform(aiPlatform,abPS3Switch);
       this.MarketplaceButton.SetPlatform(aiPlatform,abPS3Switch);
-      this.MainListHolder.SelectionArrow._visible = aiPlatform != 0;
-      if(aiPlatform != 0)
+      this.MainListHolder.SelectionArrow._visible = aiPlatform != 0 && aiPlatform != 7;
+      if(aiPlatform != 0 && aiPlatform != 7)
       {
          this.ButtonRect.AcceptGamepadButton.SetPlatform(aiPlatform,abPS3Switch);
          this.ButtonRect.CancelGamepadButton.SetPlatform(aiPlatform,abPS3Switch);
+      }
+      else
+      {
+         this.ButtonRect.AcceptMouseButton.SetPlatform(aiPlatform,false);
+         this.ButtonRect.CancelMouseButton.SetPlatform(aiPlatform,false);
       }
       this.CharacterSelectionHint.SetPlatform(aiPlatform,abPS3Switch);
       this.MarketplaceButton._visible = false;
@@ -831,6 +891,7 @@ class StartMenu extends MovieClip
       this.SaveLoadListHolder.SetPlatform(aiPlatform,abPS3Switch);
       this.PS3Switch = abPS3Switch;
       this.MainList.SetPlatform(aiPlatform,abPS3Switch);
+      this.DLCList_mc.SetPlatform(aiPlatform,abPS3Switch);
    }
    function DoFadeOutMenu()
    {
@@ -1006,7 +1067,7 @@ class StartMenu extends MovieClip
    function onSaveHighlight(event)
    {
       this.DeleteSaveButton._alpha = event.index != -1 ? StartMenu.ALPHA_AVAILABLE : StartMenu.ALPHA_DISABLED;
-      if(this.iPlatform == 0)
+      if(this.iPlatform == 0 || this.iPlatform == 7)
       {
          gfx.io.GameDelegate.call("PlaySound",["UIMenuFocus"]);
       }
@@ -1061,7 +1122,14 @@ class StartMenu extends MovieClip
    {
       if(this.strCurrentState != StartMenu.PRESS_START_STATE)
       {
-         this.StartState(StartMenu.PRESS_START_STATE);
+         if((this.iPlatform == StartMenu.PLATFORM_NX || this.iPlatform == StartMenu.PLATFORM_NX_MOUSE) && !this.firstExitedMenu)
+         {
+            this.ShowJoyConStrapInstructionScreen();
+         }
+         else
+         {
+            this.StartState(StartMenu.PRESS_START_STATE);
+         }
       }
    }
    function StartLoadingDLC()
@@ -1091,7 +1159,7 @@ class StartMenu extends MovieClip
       {
          this.DLCList_mc._visible = true;
          this.DLCPanel.warningText.SetText(" ");
-         if(this.iPlatform != 0)
+         if(this.iPlatform != 0 && this.iPlatform != 7)
          {
             this.DLCList_mc.selectedIndex = 0;
          }
@@ -1167,5 +1235,9 @@ class StartMenu extends MovieClip
    function IsPlatformXBox()
    {
       return this.iPlatform == StartMenu.PLATFORM_DURANGO || this.iPlatform == StartMenu.PLATFORM_SCARLETT;
+   }
+   function IsPlatformNintendo()
+   {
+      return this.iPlatform == StartMenu.PLATFORM_NX || this.iPlatform == StartMenu.PLATFORM_NX_MOUSE;
    }
 }

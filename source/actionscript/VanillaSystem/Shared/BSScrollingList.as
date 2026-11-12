@@ -1,0 +1,505 @@
+// Skyrim 1.7.x ships two builds of Shared.BSScrollingList. This is the one used by
+// StartMenu and Quest_Journal: when the platform changes it only moves the selection
+// if it scrolled out of view, so the highlighted save is kept while a confirm dialog
+// re-applies the platform. Every other menu uses Vanilla/Shared/BSScrollingList.as.
+class Shared.BSScrollingList extends MovieClip
+{
+   var EntriesA;
+   var ListScrollbar;
+   var ScrollDown;
+   var ScrollUp;
+   var bDisableInput;
+   var bDisableSelection;
+   var bListAnimating;
+   var bMouseDrivenNav;
+   var border;
+   var dispatchEvent;
+   var fListHeight;
+   var iListItemsShown;
+   var iMaxItemsShown;
+   var iMaxScrollPosition;
+   var iPlatform;
+   var iScrollPosition;
+   var iScrollbarDrawTimerID;
+   var iSelectedIndex;
+   var iTextOption;
+   var itemIndex;
+   var onMousePress;
+   var scrollbar;
+   var bIsInactive = false;
+   var bNoSelectionMode = false;
+   var bAllowUpToTabs = false;
+   static var TEXT_OPTION_NONE = 0;
+   static var TEXT_OPTION_SHRINK_TO_FIT = 1;
+   static var TEXT_OPTION_MULTILINE = 2;
+   function BSScrollingList()
+   {
+      super();
+      this.EntriesA = new Array();
+      this.bDisableSelection = false;
+      this.bDisableInput = false;
+      this.bMouseDrivenNav = false;
+      gfx.events.EventDispatcher.initialize(this);
+      Mouse.addListener(this);
+      this.iSelectedIndex = -1;
+      this.iScrollPosition = 0;
+      this.iMaxScrollPosition = 0;
+      this.iListItemsShown = 0;
+      this.iPlatform = 1;
+      this.fListHeight = this.border._height;
+      this.ListScrollbar = this.scrollbar;
+      this.iMaxItemsShown = 0;
+      var _loc3_ = this.GetClipByIndex(this.iMaxItemsShown);
+      while(_loc3_ != undefined)
+      {
+         _loc3_.clipIndex = this.iMaxItemsShown;
+         _loc3_.onRollOver = function()
+         {
+            if(!this._parent.listAnimating && !this._parent.bDisableInput && this.itemIndex != undefined && (this._parent.iPlatform == 0 || this._parent.iPlatform == 7))
+            {
+               this._parent.doSetSelectedIndex(this.itemIndex,0);
+               this._parent.bMouseDrivenNav = true;
+            }
+         };
+         _loc3_.onPress = function(aiMouseIndex, aiKeyboardOrMouse)
+         {
+            if(this.itemIndex != undefined)
+            {
+               this._parent.onItemPress(aiKeyboardOrMouse);
+               if(!this._parent.bDisableInput && this.onMousePress != undefined)
+               {
+                  this.onMousePress();
+               }
+            }
+         };
+         _loc3_.onPressAux = function(aiMouseIndex, aiKeyboardOrMouse, aiButtonIndex)
+         {
+            if(this.itemIndex != undefined)
+            {
+               this._parent.onItemPressAux(aiKeyboardOrMouse,aiButtonIndex);
+            }
+         };
+         _loc3_ = this.GetClipByIndex(++this.iMaxItemsShown);
+      }
+   }
+   function onLoad()
+   {
+      if(this.ListScrollbar != undefined)
+      {
+         this.ListScrollbar.position = 0;
+         this.ListScrollbar.addEventListener("scroll",this,"onScroll");
+      }
+   }
+   function ClearList()
+   {
+      this.EntriesA.splice(0,this.EntriesA.length);
+   }
+   function GetClipByIndex(aiIndex)
+   {
+      return this["Entry" + aiIndex];
+   }
+   function handleInput(details, pathToFocus)
+   {
+      var _loc4_ = false;
+      var _loc5_;
+      if(!this.bDisableInput)
+      {
+         _loc5_ = this.GetClipByIndex(this.selectedIndex - this.scrollPosition);
+         _loc4_ = _loc5_ != undefined && _loc5_.handleInput != undefined && _loc5_.handleInput(details,pathToFocus.slice(1));
+         if(!_loc4_ && Shared.GlobalFunc.IsKeyPressed(details))
+         {
+            if(details.navEquivalent == gfx.ui.NavigationCode.UP)
+            {
+               var bAtTop;
+               if (this.iNumTopHalfEntries != undefined) {
+                  bAtTop = this.iScrollPosition <= 0;
+               } else if (this.selectedIndex == -1) {
+                  bAtTop = this.iScrollPosition <= 0;
+               } else {
+                  bAtTop = this.selectedIndex <= 0;
+               }
+
+               if (bAtTop) {
+                  if (this.bAllowUpToTabs === true) {
+                     _loc4_ = false;
+                  } else {
+                     _loc4_ = true;
+                  }
+               } else {
+                  this.moveSelectionUp();
+                  _loc4_ = true;
+               }
+            }
+            else if(details.navEquivalent == gfx.ui.NavigationCode.DOWN)
+            {
+               this.moveSelectionDown();
+               _loc4_ = true;
+            }
+            else if(!this.bDisableSelection && details.navEquivalent == gfx.ui.NavigationCode.ENTER)
+            {
+               this.onItemPress();
+               _loc4_ = true;
+            }
+         }
+      }
+      return _loc4_;
+   }
+   function onMouseWheel(delta)
+   {
+      if (!this.bDisableInput)
+      {
+         if (this.hitTest(_root._xmouse, _root._ymouse, true))
+         {
+            this.doSetSelectedIndex(-1, 0);
+            
+            if (delta < 0)      this.scrollPosition += 1;
+            else if (delta > 0) this.scrollPosition -= 1;
+         }
+      }
+   }
+   function get selectedIndex()
+   {
+      return this.iSelectedIndex;
+   }
+   function set selectedIndex(aiNewIndex)
+   {
+      this.doSetSelectedIndex(aiNewIndex);
+   }
+   function get length()
+   {
+      return this.EntriesA.length;
+   }
+   function get listAnimating()
+   {
+      return this.bListAnimating;
+   }
+   function set listAnimating(abFlag)
+   {
+      this.bListAnimating = abFlag;
+   }
+   function doSetSelectedIndex(aiNewIndex, aiKeyboardOrMouse)
+   {
+      var _loc4_;
+      if(!this.bDisableSelection && aiNewIndex != this.iSelectedIndex)
+      {
+         _loc4_ = this.iSelectedIndex;
+         this.iSelectedIndex = aiNewIndex;
+         if(_loc4_ != -1)
+         {
+            this.SetEntry(this.GetClipByIndex(this.EntriesA[_loc4_].clipIndex),this.EntriesA[_loc4_]);
+         }
+         if(this.iSelectedIndex != -1)
+         {
+            if(this.iPlatform != 0 && aiKeyboardOrMouse != 0)
+            {
+               if(this.iSelectedIndex < this.iScrollPosition)
+               {
+                  this.scrollPosition = this.iSelectedIndex;
+               }
+               else if(this.iSelectedIndex >= this.iScrollPosition + this.iListItemsShown)
+               {
+                  this.scrollPosition = Math.min(this.iSelectedIndex - this.iListItemsShown + 1,this.iMaxScrollPosition);
+               }
+               else
+               {
+                  this.SetEntry(this.GetClipByIndex(this.EntriesA[this.iSelectedIndex].clipIndex),this.EntriesA[this.iSelectedIndex]);
+               }
+            }
+            else
+            {
+               this.SetEntry(this.GetClipByIndex(this.EntriesA[this.iSelectedIndex].clipIndex),this.EntriesA[this.iSelectedIndex]);
+            }
+         }
+         this.dispatchEvent({type:"selectionChange",index:this.iSelectedIndex,keyboardOrMouse:aiKeyboardOrMouse});
+      }
+   }
+   function get scrollPosition()
+   {
+      return this.iScrollPosition;
+   }
+   function get maxScrollPosition()
+   {
+      return this.iMaxScrollPosition;
+   }
+   function set scrollPosition(aiNewPosition)
+   {
+      if(aiNewPosition != this.iScrollPosition && aiNewPosition >= 0 && aiNewPosition <= this.iMaxScrollPosition)
+      {
+         if(this.ListScrollbar != undefined)
+         {
+            this.ListScrollbar.position = aiNewPosition;
+         }
+         else
+         {
+            this.updateScrollPosition(aiNewPosition);
+         }
+      }
+   }
+   function updateScrollPosition(aiPosition)
+   {
+      this.iScrollPosition = aiPosition;
+      this.UpdateList();
+   }
+   function get selectedEntry()
+   {
+      return this.EntriesA[this.iSelectedIndex];
+   }
+   function get entryList()
+   {
+      return this.EntriesA;
+   }
+   function set entryList(anewArray)
+   {
+      this.EntriesA = anewArray;
+   }
+   function get disableSelection()
+   {
+      return this.bDisableSelection;
+   }
+   function set disableSelection(abFlag)
+   {
+      this.bDisableSelection = abFlag;
+   }
+   function get disableInput()
+   {
+      return this.bDisableInput;
+   }
+   function set disableInput(abFlag)
+   {
+      this.bDisableInput = abFlag;
+   }
+   function get maxEntries()
+   {
+      return this.iMaxItemsShown;
+   }
+   function get textOption()
+   {
+      return this.iTextOption;
+   }
+   function set textOption(strNewOption)
+   {
+      if(strNewOption == "None")
+      {
+         this.iTextOption = Shared.BSScrollingList.TEXT_OPTION_NONE;
+      }
+      else if(strNewOption == "Shrink To Fit")
+      {
+         this.iTextOption = Shared.BSScrollingList.TEXT_OPTION_SHRINK_TO_FIT;
+      }
+      else if(strNewOption == "Multi-Line")
+      {
+         this.iTextOption = Shared.BSScrollingList.TEXT_OPTION_MULTILINE;
+      }
+   }
+   function UpdateList()
+   {
+      var _loc2_ = this.GetClipByIndex(0)._y;
+      var _loc3_ = 0;
+      var _loc4_ = 0;
+      while(_loc4_ < this.iScrollPosition)
+      {
+         this.EntriesA[_loc4_].clipIndex = undefined;
+         _loc4_ += 1;
+      }
+      this.iListItemsShown = 0;
+      _loc4_ = this.iScrollPosition;
+      var _loc5_;
+      while(_loc4_ < this.EntriesA.length && this.iListItemsShown < this.iMaxItemsShown && _loc3_ <= this.fListHeight)
+      {
+         _loc5_ = this.GetClipByIndex(this.iListItemsShown);
+         this.SetEntry(_loc5_,this.EntriesA[_loc4_]);
+         this.EntriesA[_loc4_].clipIndex = this.iListItemsShown;
+         _loc5_.itemIndex = _loc4_;
+         _loc5_._y = _loc2_ + _loc3_;
+         _loc5_._visible = true;
+         _loc3_ += _loc5_._height;
+         if(_loc3_ <= this.fListHeight && this.iListItemsShown < this.iMaxItemsShown)
+         {
+            this.iListItemsShown++;
+         }
+         _loc4_ += 1;
+      }
+      var _loc6_ = this.iListItemsShown;
+      while(_loc6_ < this.iMaxItemsShown)
+      {
+         this.GetClipByIndex(_loc6_)._visible = false;
+         _loc6_ += 1;
+      }
+      if(this.ScrollUp != undefined)
+      {
+         this.ScrollUp._visible = this.scrollPosition > 0;
+      }
+      if(this.ScrollDown != undefined)
+      {
+         this.ScrollDown._visible = this.scrollPosition < this.iMaxScrollPosition;
+      }
+   }
+   function InvalidateData()
+   {
+      var _loc2_ = this.iMaxScrollPosition;
+      this.fListHeight = this.border._height;
+      this.CalculateMaxScrollPosition();
+      if(this.ListScrollbar != undefined)
+      {
+         if(_loc2_ != this.iMaxScrollPosition)
+         {
+            this.ListScrollbar._visible = false;
+            this.ListScrollbar.setScrollProperties(this.iMaxItemsShown,0,this.iMaxScrollPosition);
+            if(this.iScrollbarDrawTimerID != undefined)
+            {
+               clearInterval(this.iScrollbarDrawTimerID);
+            }
+            this.iScrollbarDrawTimerID = setInterval(this,"SetScrollbarVisibility",50);
+         }
+         else
+         {
+            this.SetScrollbarVisibility();
+         }
+      }
+      if(this.iSelectedIndex >= this.EntriesA.length)
+      {
+         this.iSelectedIndex = this.EntriesA.length - 1;
+      }
+      if(this.iScrollPosition > this.iMaxScrollPosition)
+      {
+         this.iScrollPosition = this.iMaxScrollPosition;
+      }
+      this.UpdateList();
+   }
+   function SetScrollbarVisibility()
+   {
+      clearInterval(this.iScrollbarDrawTimerID);
+      this.iScrollbarDrawTimerID = undefined;
+      this.ListScrollbar._visible = this.iMaxScrollPosition > 0;
+   }
+   function CalculateMaxScrollPosition()
+   {
+      var _loc2_ = 0;
+      var _loc3_ = this.EntriesA.length - 1;
+      while(_loc3_ >= 0 && _loc2_ <= this.fListHeight)
+      {
+         _loc2_ += this.GetEntryHeight(_loc3_);
+         if(_loc2_ <= this.fListHeight)
+         {
+            _loc3_ -= 1;
+         }
+      }
+      this.iMaxScrollPosition = _loc3_ + 1;
+   }
+   function GetEntryHeight(aiEntryIndex)
+   {
+      var _loc3_ = this.GetClipByIndex(0);
+      this.SetEntry(_loc3_,this.EntriesA[aiEntryIndex]);
+      return _loc3_._height;
+   }
+   function moveSelectionUp()
+   {
+      if(this.EntriesA.length != 1)
+      {
+         if(!this.bDisableSelection)
+         {
+            if(this.selectedIndex > 0)
+            {
+               this.selectedIndex -= 1;
+            }
+         }
+         else
+         {
+            this.scrollPosition -= 1;
+         }
+      }
+   }
+   function moveSelectionDown()
+   {
+      if(this.EntriesA.length != 1)
+      {
+         if(!this.bDisableSelection)
+         {
+            if(this.selectedIndex < this.EntriesA.length - 1)
+            {
+               this.selectedIndex += 1;
+            }
+         }
+         else
+         {
+            this.scrollPosition += 1;
+         }
+      }
+   }
+   function onItemPress(aiKeyboardOrMouse)
+   {
+      if(!this.bDisableInput && !this.bDisableSelection && this.iSelectedIndex != -1)
+      {
+         this.dispatchEvent({type:"itemPress",index:this.iSelectedIndex,entry:this.EntriesA[this.iSelectedIndex],keyboardOrMouse:aiKeyboardOrMouse});
+      }
+      else
+      {
+         this.dispatchEvent({type:"listPress"});
+      }
+   }
+   function onItemPressAux(aiKeyboardOrMouse, aiButtonIndex)
+   {
+      if(!this.bDisableInput && !this.bDisableSelection && this.iSelectedIndex != -1 && aiButtonIndex == 1)
+      {
+         this.dispatchEvent({type:"itemPressAux",index:this.iSelectedIndex,entry:this.EntriesA[this.iSelectedIndex],keyboardOrMouse:aiKeyboardOrMouse});
+      }
+   }
+   function SetEntry(aEntryClip, aEntryObject)
+   {
+      if(aEntryClip != undefined)
+      {
+         if(aEntryObject == this.selectedEntry)
+         {
+            aEntryClip.gotoAndStop("Selected");
+         }
+         else
+         {
+            aEntryClip.gotoAndStop("Normal");
+         }
+         this.SetEntryText(aEntryClip,aEntryObject);
+      }
+   }
+   function SetEntryText(aEntryClip, aEntryObject)
+   {
+      if(aEntryClip.textField != undefined)
+      {
+         if(this.textOption == Shared.BSScrollingList.TEXT_OPTION_SHRINK_TO_FIT)
+         {
+            aEntryClip.textField.textAutoSize = "shrink";
+         }
+         else if(this.textOption == Shared.BSScrollingList.TEXT_OPTION_MULTILINE)
+         {
+            aEntryClip.textField.verticalAutoSize = "top";
+         }
+         if(aEntryObject.text != undefined)
+         {
+            aEntryClip.textField.SetText(aEntryObject.text);
+         }
+         else
+         {
+            aEntryClip.textField.SetText(" ");
+         }
+         if(aEntryObject.enabled != undefined)
+         {
+            aEntryClip.textField.textColor = aEntryObject.enabled != false ? 16777215 : 6316128;
+         }
+         if(aEntryObject.disabled != undefined)
+         {
+            aEntryClip.textField.textColor = aEntryObject.disabled != true ? 16777215 : 6316128;
+         }
+      }
+   }
+   function SetPlatform(aiPlatform, abPS3Switch)
+   {
+      this.iPlatform = aiPlatform;
+      this.bMouseDrivenNav = this.iPlatform == 0 || this.iPlatform == 7;
+      if(!this.bMouseDrivenNav && (this.selectedIndex >= this.scrollPosition + this.iListItemsShown || this.selectedIndex < this.scrollPosition))
+      {
+         this.selectedIndex = this.scrollPosition;
+      }
+   }
+   function onScroll(event)
+   {
+      this.updateScrollPosition(Math.floor(event.position + 0.5));
+   }
+}

@@ -97,6 +97,7 @@ class HUDMenu extends Shared.PlatformChangeUser
    static var CONTROLLER_ORBIS = 3;
    static var CONTROLLER_SCARLETT = 4;
    static var CONTROLLER_PROSPERO = 5;
+   static var CONTROLLER_NX = 6;
    function HUDMenu()
    {
       super();

@@ -51,7 +51,7 @@ class Shared.BSScrollingList extends MovieClip
          _loc3_.clipIndex = this.iMaxItemsShown;
          _loc3_.onRollOver = function()
          {
-            if(!this._parent.listAnimating && !this._parent.bDisableInput && this.itemIndex != undefined)
+            if(!this._parent.listAnimating && !this._parent.bDisableInput && this.itemIndex != undefined && (this._parent.iPlatform == 0 || this._parent.iPlatform == 7))
             {
                this._parent.doSetSelectedIndex(this.itemIndex,0);
                this._parent.bMouseDrivenNav = true;
@@ -186,7 +186,7 @@ class Shared.BSScrollingList extends MovieClip
          }
          if(this.iSelectedIndex != -1)
          {
-            if(this.iPlatform != 0)
+            if(this.iPlatform != 0 && (this.iPlatform != 7 || aiKeyboardOrMouse != 0))
             {
                if(this.iSelectedIndex < this.iScrollPosition)
                {
@@ -488,7 +488,11 @@ class Shared.BSScrollingList extends MovieClip
    function SetPlatform(aiPlatform, abPS3Switch)
    {
       this.iPlatform = aiPlatform;
-      this.bMouseDrivenNav = this.iPlatform == 0;
+      this.bMouseDrivenNav = this.iPlatform == 0 || this.iPlatform == 7;
+      if(!this.bMouseDrivenNav)
+      {
+         this.selectedIndex = this.scrollPosition;
+      }
    }
    function onScroll(event)
    {

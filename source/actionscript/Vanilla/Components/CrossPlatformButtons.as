@@ -5,6 +5,7 @@ class Components.CrossPlatformButtons extends gfx.controls.Button
    var ButtonArtSecondary_mc;
    var ButtonArt_mc;
    var CurrentPlatform;
+   var NXButton;
    var OnTextFieldChanged;
    var PCButton;
    var PS3Button;
@@ -19,6 +20,7 @@ class Components.CrossPlatformButtons extends gfx.controls.Button
    var XBoxButtonSecondary = null;
    var PS3ButtonSecondary = null;
    var PCButtonSecondary = null;
+   var NXButtonSecondary = null;
    function CrossPlatformButtons()
    {
       super();
@@ -80,6 +82,14 @@ class Components.CrossPlatformButtons extends gfx.controls.Button
             if(this.XBoxButtonSecondary != null)
             {
                this.ButtonArtSecondary_mc = this.attachMovie(this.XBoxButtonSecondary,"ButtonArtSecondary",this.getNextHighestDepth());
+            }
+            break;
+         case Shared.ButtonChange.PLATFORM_NX:
+         case Shared.ButtonChange.PLATFORM_NX_MOUSE:
+            this.ButtonArt_mc = this.attachMovie(this.NXButton,"ButtonArt",this.getNextHighestDepth());
+            if(this.NXButtonSecondary != null)
+            {
+               this.ButtonArtSecondary_mc = this.attachMovie(this.NXButtonSecondary,"ButtonArtSecondary",this.getNextHighestDepth());
             }
             break;
          case Shared.ButtonChange.PLATFORM_PS3:
@@ -258,11 +268,11 @@ class Components.CrossPlatformButtons extends gfx.controls.Button
       var _loc2_ = null;
       if(this.PCArtSecondary != undefined)
       {
-         _loc2_ = {PCArt:this.PCButton,XBoxArt:this.XBoxButton,PS3Art:this.PS3Button,PCArtSecondary:this.PCButtonSecondary,XBoxArtSecondary:this.XBoxButtonSecondary,PS3ArtSecondary:this.PS3ButtonSecondary};
+         _loc2_ = {PCArt:this.PCButton,XBoxArt:this.XBoxButton,PS3Art:this.PS3Button,NXArt:this.NXButton,PCArtSecondary:this.PCButtonSecondary,XBoxArtSecondary:this.XBoxButtonSecondary,PS3ArtSecondary:this.PS3ButtonSecondary,NXArtSecondary:this.NXButtonSecondary};
       }
       else
       {
-         _loc2_ = {PCArt:this.PCButton,XBoxArt:this.XBoxButton,PS3Art:this.PS3Button};
+         _loc2_ = {PCArt:this.PCButton,XBoxArt:this.XBoxButton,PS3Art:this.PS3Button,NXArt:this.NXButton};
       }
       return _loc2_;
    }
@@ -271,11 +281,13 @@ class Components.CrossPlatformButtons extends gfx.controls.Button
       this.PCArt = aPlatformArt.PCArt;
       this.XBoxArt = aPlatformArt.XBoxArt;
       this.PS3Art = aPlatformArt.PS3Art;
+      this.NXArt = aPlatformArt.NXArt;
       if(aPlatformArt.PCArtSecondary != undefined)
       {
          this.PCArtSecondary = aPlatformArt.PCArtSecondary;
          this.XBoxArtSecondary = aPlatformArt.XBoxArtSecondary;
          this.PS3ArtSecondary = aPlatformArt.PS3ArtSecondary;
+         this.NXArtSecondary = aPlatformArt.NXArtSecondary;
       }
       this.RefreshArt();
    }
@@ -343,6 +355,28 @@ class Components.CrossPlatformButtons extends gfx.controls.Button
       if(aValue != "")
       {
          this.PCButtonSecondary = aValue;
+      }
+   }
+   function get NXArt()
+   {
+      return null;
+   }
+   function set NXArt(aValue)
+   {
+      if(aValue != "")
+      {
+         this.NXButton = aValue;
+      }
+   }
+   function get NXArtSecondary()
+   {
+      return null;
+   }
+   function set NXArtSecondary(aValue)
+   {
+      if(aValue != "")
+      {
+         this.NXButtonSecondary = aValue;
       }
    }
    function Reposition()

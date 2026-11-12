@@ -246,7 +246,10 @@ class RaceSexPanels extends MovieClip
       }
       if(!_loc3_ && (RaceSexPanels.UpdateInterval == -1 || this._CategoriesList.selectedIndex == RaceSexPanels.RACE_CATEGORY))
       {
-         pathToFocus[0].handleInput(details,pathToFocus.slice(1));
+         if(this.iPlatform != 7 || details.navEquivalent != gfx.ui.NavigationCode.GAMEPAD_L1 && details.navEquivalent != gfx.ui.NavigationCode.GAMEPAD_R1)
+         {
+            pathToFocus[0].handleInput(details,pathToFocus.slice(1));
+         }
       }
       return true;
    }

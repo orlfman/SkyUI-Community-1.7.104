@@ -17,6 +17,7 @@ class JournalBottomBar extends MovieClip
    static var TAB_SYSTEM = 2;
    static var PLATFORM_PC_KBMOUSE = 0;
    static var PLATFORM_PC_GAMEPAD = 1;
+   static var PLATFORM_NX_MOUSE = 7;
    static var IDX_BUTTON1 = 0;
    static var IDX_BUTTON2 = 1;
    static var IDX_BUTTON3 = 2;
@@ -59,9 +60,9 @@ class JournalBottomBar extends MovieClip
       {
          case JournalBottomBar.TAB_QUEST:
             this.Buttons[JournalBottomBar.IDX_BUTTON1].label = "$Toggle Active";
-            this.Buttons[JournalBottomBar.IDX_BUTTON1].SetArt({PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A"});
+            this.Buttons[JournalBottomBar.IDX_BUTTON1].SetArt({PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",NXArt:"NX_A"});
             this.Buttons[JournalBottomBar.IDX_BUTTON2].label = "$Show on Map";
-            this.Buttons[JournalBottomBar.IDX_BUTTON2].SetArt({PCArt:"M",XBoxArt:"360_X",PS3Art:"PS3_X"});
+            this.Buttons[JournalBottomBar.IDX_BUTTON2].SetArt({PCArt:"M",XBoxArt:"360_X",PS3Art:"PS3_X",NXArt:"NX_Y"});
             var _temp_2 = this.Buttons[JournalBottomBar.IDX_BUTTON1];
             var _temp_1 = "_visible";
             this.Buttons[JournalBottomBar.IDX_BUTTON2]._visible = _loc0_ = true;
@@ -73,9 +74,9 @@ class JournalBottomBar extends MovieClip
             break;
          case JournalBottomBar.TAB_SYSTEM:
             this.Buttons[JournalBottomBar.IDX_BUTTON1].label = "$Delete";
-            this.Buttons[JournalBottomBar.IDX_BUTTON1].SetArt({PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X"});
+            this.Buttons[JournalBottomBar.IDX_BUTTON1].SetArt({PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",NXArt:"NX_Y"});
             this.Buttons[JournalBottomBar.IDX_BUTTON2].label = "$CharacterSelection";
-            this.Buttons[JournalBottomBar.IDX_BUTTON2].SetArt({PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y"});
+            this.Buttons[JournalBottomBar.IDX_BUTTON2].SetArt({PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X"});
             this.CorrectButton(JournalBottomBar.IDX_BUTTON1);
             this.CorrectButton(JournalBottomBar.IDX_BUTTON2);
             this.PositionButtons();
@@ -87,7 +88,7 @@ class JournalBottomBar extends MovieClip
       var _loc2_ = 20;
       this.Buttons[JournalBottomBar.IDX_BUTTON1]._x = this.Buttons[JournalBottomBar.IDX_BUTTON1].ButtonArt._width;
       this.Buttons[JournalBottomBar.IDX_BUTTON2]._x = this.Buttons[JournalBottomBar.IDX_BUTTON1]._x + this.Buttons[JournalBottomBar.IDX_BUTTON1].textField.getLineMetrics(0).width + _loc2_ + this.Buttons[JournalBottomBar.IDX_BUTTON2].ButtonArt._width;
-      this.Buttons[JournalBottomBar.IDX_BUTTON3]._x = this.Buttons[JournalBottomBar.IDX_BUTTON2]._x + this.Buttons[JournalBottomBar.IDX_BUTTON2].textField.getLineMetrics(0).width + _loc2_ + this.Buttons[JournalBottomBar.IDX_BUTTON2].ButtonArt._width;
+      this.Buttons[JournalBottomBar.IDX_BUTTON3]._x = this.Buttons[JournalBottomBar.IDX_BUTTON2]._x + this.Buttons[JournalBottomBar.IDX_BUTTON2].textField.getLineMetrics(0).width + _loc2_ + this.Buttons[JournalBottomBar.IDX_BUTTON3].ButtonArt._width;
    }
    function SetPlatform(aiPlatform, abPS3Switch)
    {
@@ -108,7 +109,7 @@ class JournalBottomBar extends MovieClip
             _loc2_ = _loc2_ + 1;
          }
       }
-      if(aiPlatform == JournalBottomBar.PLATFORM_PC_KBMOUSE)
+      if(aiPlatform == JournalBottomBar.PLATFORM_PC_KBMOUSE || aiPlatform == JournalBottomBar.PLATFORM_NX_MOUSE)
       {
          this.GamePadButton1_mc._visible = false;
          this.GamePadButton2_mc._visible = false;
@@ -150,6 +151,7 @@ class JournalBottomBar extends MovieClip
             _loc2_ = _loc2_ + 1;
          }
       }
+      this.PositionButtons();
    }
    function SetButtonVisibility(aiButtonIndex, abVisible, afAlpha)
    {

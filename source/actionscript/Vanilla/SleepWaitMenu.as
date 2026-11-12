@@ -6,6 +6,8 @@ class SleepWaitMenu extends MovieClip
    var HoursText;
    var QuestionInstance;
    var bDisableControls;
+   var iPlatform = 0;
+   static var PLATFORM_NX_MOUSE = 7;
    function SleepWaitMenu()
    {
       super();
@@ -47,16 +49,22 @@ class SleepWaitMenu extends MovieClip
                break;
             case gfx.ui.NavigationCode.PAGE_UP:
             case gfx.ui.NavigationCode.GAMEPAD_R1:
-               if(!this.disableControls)
+               if(this.iPlatform != SleepWaitMenu.PLATFORM_NX_MOUSE)
                {
-                  this.modifySliderValue(4);
+                  if(!this.disableControls)
+                  {
+                     this.modifySliderValue(4);
+                  }
                }
                break;
             case gfx.ui.NavigationCode.PAGE_DOWN:
             case gfx.ui.NavigationCode.GAMEPAD_L1:
-               if(!this.disableControls)
+               if(this.iPlatform != SleepWaitMenu.PLATFORM_NX_MOUSE)
                {
-                  this.modifySliderValue(-4);
+                  if(!this.disableControls)
+                  {
+                     this.modifySliderValue(-4);
+                  }
                }
          }
       }
@@ -125,14 +133,20 @@ class SleepWaitMenu extends MovieClip
    }
    function SetPlatform(aiPlatformIndex, abPS3Switch)
    {
-      this.ButtonRect.AcceptGamepadButton._visible = aiPlatformIndex != 0;
-      this.ButtonRect.CancelGamepadButton._visible = aiPlatformIndex != 0;
-      this.ButtonRect.AcceptMouseButton._visible = aiPlatformIndex == 0;
-      this.ButtonRect.CancelMouseButton._visible = aiPlatformIndex == 0;
-      if(aiPlatformIndex != 0)
+      this.iPlatform = aiPlatformIndex;
+      this.ButtonRect.AcceptGamepadButton._visible = aiPlatformIndex != 0 && aiPlatformIndex != 7;
+      this.ButtonRect.CancelGamepadButton._visible = aiPlatformIndex != 0 && aiPlatformIndex != 7;
+      this.ButtonRect.AcceptMouseButton._visible = aiPlatformIndex == 0 || aiPlatformIndex == 7;
+      this.ButtonRect.CancelMouseButton._visible = aiPlatformIndex == 0 || aiPlatformIndex == 7;
+      if(aiPlatformIndex != 0 && aiPlatformIndex != 7)
       {
          this.ButtonRect.AcceptGamepadButton.SetPlatform(aiPlatformIndex,abPS3Switch);
          this.ButtonRect.CancelGamepadButton.SetPlatform(aiPlatformIndex,abPS3Switch);
+      }
+      else
+      {
+         this.ButtonRect.AcceptMouseButton.SetPlatform(aiPlatformIndex,false);
+         this.ButtonRect.CancelMouseButton.SetPlatform(aiPlatformIndex,false);
       }
    }
 }

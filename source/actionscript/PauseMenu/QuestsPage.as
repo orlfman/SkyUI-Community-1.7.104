@@ -95,7 +95,7 @@ class QuestsPage extends MovieClip
             }
             else if(details.navEquivalent == gfx.ui.NavigationCode.RIGHT && gfx.managers.FocusHandler.instance.getFocus(0) != this.ObjectiveList)
             {
-               this.SwitchFocusToObjectives();
+               this.SwitchFocusToObjectives(true);
                _loc2_ = true;
             }
          }
@@ -159,26 +159,33 @@ class QuestsPage extends MovieClip
       this.Divider.gotoAndStop("Right");
       this.ToggleActiveButton._alpha = 100;
       this.ObjectiveList.selectedIndex = -1;
-      if(this.iPlatform != 0)
+      if(this.iPlatform != 0 && this.iPlatform != 7)
       {
          this.ObjectiveList.disableSelection = true;
       }
       this.UpdateShowOnMapButtonAlpha(0);
    }
-   function SwitchFocusToObjectives()
+   function SwitchFocusToObjectives(doUpdateSelectedIndex)
    {
       gfx.managers.FocusHandler.instance.setFocus(this.ObjectiveList,0);
       this.Divider.gotoAndStop("Left");
       this.ToggleActiveButton._alpha = !this.IsViewingMiscObjectives() ? 50 : 100;
-      if(this.iPlatform != 0)
+      if(this.iPlatform != 0 && this.iPlatform != 7)
       {
          this.ObjectiveList.disableSelection = false;
       }
-      this.ObjectiveList.selectedIndex = 0;
+      if(doUpdateSelectedIndex)
+      {
+         this.ObjectiveList.selectedIndex = 0;
+      }
       this.UpdateShowOnMapButtonAlpha(0);
    }
    function onObjectiveListHighlight(event)
    {
+      if(this.iPlatform == 0 || this.iPlatform == 7)
+      {
+         this.SwitchFocusToObjectives(false);
+      }
       this.UpdateShowOnMapButtonAlpha(event.index);
    }
    function UpdateShowOnMapButtonAlpha(aiObjIndex)
@@ -319,7 +326,7 @@ class QuestsPage extends MovieClip
          this.ObjectivesHeader._visible = !this.IsViewingMiscObjectives();
          this.ObjectiveList.selectedIndex = -1;
          this.ObjectiveList.scrollPosition = 0;
-         if(this.iPlatform != 0)
+         if(this.iPlatform != 0 && this.iPlatform != 7)
          {
             this.ObjectiveList.disableSelection = true;
          }
@@ -383,6 +390,10 @@ class QuestsPage extends MovieClip
    }
    function onTitleListMouseSelectionChange(event)
    {
+      if(this.iPlatform == 0 || this.iPlatform == 7)
+      {
+         this.SwitchFocusToTitles();
+      }
       if (event.index == -1) {
          this.onQuestHighlight();
          return;
@@ -430,5 +441,9 @@ class QuestsPage extends MovieClip
       this.iPlatform = aiPlatform;
       this.TitleList.SetPlatform(aiPlatform,abPS3Switch);
       this.ObjectiveList.SetPlatform(aiPlatform,abPS3Switch);
+      if(this.iPlatform == 0 || this.iPlatform == 7)
+      {
+         this.ObjectiveList.disableSelection = false;
+      }
    }
 }

@@ -13,6 +13,8 @@ Variables consumed (all optional — auto-detected if absent):
                     Default: searches system and Steam Proton install locations.
   STEAM_APP_ID      Steam App ID whose compatdata prefix is used as WINEPREFIX.
                     Default: 489830 (Skyrim Special Edition)
+  WINEPREFIX_PATH   Explicit WINEPREFIX; overrides the STEAM_APP_ID lookup.
+  CreationKit_PATH  Directory with "Papyrus Compiler/" (default: SkyrimSE_PATH).
 
 Variables produced:
   BSARCH_COMMAND          Proton wrapper script for bsarch.exe
@@ -32,6 +34,9 @@ message(STATUS "[Linux] Configuring Proton tool wrappers")
 # Resolve Proton wine binary
 # ---------------------------------------------------------------------------
 
+if((NOT DEFINED PROTON_WINE OR PROTON_WINE STREQUAL "") AND DEFINED ENV{PROTON_WINE})
+    set(PROTON_WINE "$ENV{PROTON_WINE}")
+endif()
 if(NOT DEFINED PROTON_WINE OR PROTON_WINE STREQUAL "")
     # Search order: system Proton (e.g. CachyOS) → Steam-installed Proton builds
     find_program(PROTON_WINE wine
@@ -67,7 +72,16 @@ if(NOT DEFINED STEAM_APP_ID OR STEAM_APP_ID STREQUAL "")
     set(STEAM_APP_ID "489830")  # Skyrim Special Edition
 endif()
 
-set(_WINEPREFIX "$ENV{HOME}/.local/share/Steam/steamapps/compatdata/${STEAM_APP_ID}/pfx")
+# WINEPREFIX_PATH overrides the prefix, e.g. when the game lives in another Steam
+# library, or to keep the build's Windows tools out of the game's own prefix.
+if(NOT DEFINED WINEPREFIX_PATH AND DEFINED ENV{WINEPREFIX_PATH})
+    set(WINEPREFIX_PATH "$ENV{WINEPREFIX_PATH}")
+endif()
+if(DEFINED WINEPREFIX_PATH AND NOT WINEPREFIX_PATH STREQUAL "")
+    set(_WINEPREFIX "${WINEPREFIX_PATH}")
+else()
+    set(_WINEPREFIX "$ENV{HOME}/.local/share/Steam/steamapps/compatdata/${STEAM_APP_ID}/pfx")
+endif()
 if(NOT EXISTS "${_WINEPREFIX}")
     message(FATAL_ERROR
         "[LinuxTools] WINEPREFIX '${_WINEPREFIX}' does not exist.\n"
@@ -210,17 +224,17 @@ set(BSARCH_COMMAND "${_BSARCH_WRAPPER}" CACHE FILEPATH "bsarch Proton wrapper" F
 message(STATUS "[Linux] bsarch wrapper   : ${_BSARCH_WRAPPER}")
 
 # ---------------------------------------------------------------------------
-# PapyrusCompiler.exe — Papyrus compiler (bundled with Skyrim SE)
+# PapyrusCompiler.exe — Papyrus compiler (ships with the Creation Kit)
 #
 # Papyrus.cmake resolves the compiler as <GAME>/Papyrus Compiler/PapyrusCompiler.exe,
 # so this wrapper dir must mirror that layout with a Proton wrapper in place of the exe.
 # ---------------------------------------------------------------------------
 
-set(_PAPYRUS_COMPILER_EXE "${SkyrimSE_PATH}/Papyrus Compiler/PapyrusCompiler.exe")
+set(_PAPYRUS_COMPILER_EXE "${CreationKit_PATH}/Papyrus Compiler/PapyrusCompiler.exe")
 if(NOT EXISTS "${_PAPYRUS_COMPILER_EXE}")
     message(FATAL_ERROR
         "[LinuxTools] PapyrusCompiler.exe not found at '${_PAPYRUS_COMPILER_EXE}'.\n"
-        "Ensure Skyrim Special Edition is installed and SkyrimSE_PATH is set correctly.")
+        "Install the Creation Kit, and set CreationKit_PATH if it is not inside SkyrimSE_PATH.")
 endif()
 
 set(_PAPYRUS_WRAPPER_DIR "${CMAKE_BINARY_DIR}/tools/papyrus-wrapper/Papyrus Compiler")

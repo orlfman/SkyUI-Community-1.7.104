@@ -1,10 +1,13 @@
 class SystemPage extends MovieClip
 {
    var BottomBar_mc;
+   var CachedRemapEvent;
    var CategoryList;
    var CategoryList_mc;
    var ConfirmPanel;
    var ConfirmTextField;
+   var ControlsList;
+   var ControlsPanel;
    var CreationListPanel;
    var CreationTextPanel;
    var CreationsButtonHolder;
@@ -20,6 +23,7 @@ class SystemPage extends MovieClip
    var HelpTitleText;
    var InputMappingPanel;
    var MappingList;
+   var MappingTitleText;
    var OptionsListsPanel;
    var PCQuitList;
    var PCQuitPanel;
@@ -69,6 +73,7 @@ class SystemPage extends MovieClip
    static var TRANSITIONING = 15;
    static var CHARACTER_LOAD_STATE = 16;
    static var CHARACTER_SELECTION_STATE = 17;
+   static var CONTROLS_CATEGORY_STATE = 18;
    // static var MOD_MANAGER_BUTTON_INDEX = 4;
    static var CONTROLLER_ORBIS = 3;
    static var CONTROLLER_SCARLETT = 4;
@@ -87,14 +92,19 @@ class SystemPage extends MovieClip
    static var IDX_HELP;
    static var IDX_QUIT;
 
+   static var CONTROLLER_NX = 6;
+   static var CONTROLLER_NX_MOUSE = 7;
    var CancelButtonMappedTo = "Esc";
+   var SelectedHelpIndex = 0;
    function SystemPage()
    {
       super();
       this.CategoryList = this.CategoryList_mc.List_mc;
       this.SaveLoadListHolder = this.SaveLoadPanel;
       this.SettingsList = this.SettingsPanel.List_mc;
+      this.ControlsList = this.ControlsPanel.List_mc;
       this.MappingList = this.InputMappingPanel.List_mc;
+      this.MappingTitleText = this.InputMappingPanel.TitleGroup.TitleText;
       this.PCQuitList = this.PCQuitPanel.List_mc;
       this.HelpList = this.HelpListPanel.List_mc;
       this.HelpText = this.HelpTextPanel.HelpTextHolder.HelpText;
@@ -164,6 +174,11 @@ class SystemPage extends MovieClip
       this.SettingsList.InvalidateData();
       this.SettingsList.addEventListener("itemPress",this,"onSettingsCategoryPress");
       this.SettingsList.disableInput = true;
+      this.ControlsList.entryList = [{text:"$NX_Gamepad"},{text:"$NX_JoyCon2Mouse"}];
+      this.ControlsList.InvalidateData();
+      this.ControlsList.addEventListener("itemPress",this,"onControlsCategoryPress");
+      this.ControlsList.disableInput = true;
+      this.MappingTitleText.textAutoSize = "shrink";
       this.InputMappingPanel.List_mc.addEventListener("itemPress",this,"onInputMappingPress");
       gfx.io.GameDelegate.addCallBack("FinishRemapMode",this,"onFinishRemapMode");
       gfx.io.GameDelegate.addCallBack("SettingsSaved",this,"onSettingsSaved");
@@ -181,6 +196,12 @@ class SystemPage extends MovieClip
       gfx.io.GameDelegate.addCallBack("BackOutFromLoadGame",this,"BackOutFromLoadGame");
       gfx.io.GameDelegate.addCallBack("SetRemoteDevice",this,"SetRemoteDevice");
       gfx.io.GameDelegate.addCallBack("UpdatePermissions",this,"UpdatePermissions");
+      this.SettingsList.selectedIndex = 0;
+      this.ControlsList.selectedIndex = 0;
+      this.PCQuitList.selectedIndex = 0;
+      this.HelpList.selectedIndex = 0;
+      this.CreationsList.selectedIndex = 0;
+      this.MappingList.selectedIndex = 0;
    }
    function SetShowMod(bshow)
    {
@@ -221,6 +242,7 @@ class SystemPage extends MovieClip
             {
                this.BottomBar_mc.Buttons[_loc2_].label = this.TabPageSwitchBottomMem[_loc2_].Label;
                this.BottomBar_mc.Buttons[_loc2_].SetArt(this.TabPageSwitchBottomMem[_loc2_].Art);
+               this.BottomBar_mc.PositionButtons();
             }
             _loc2_ = _loc2_ + 1;
          }
@@ -375,7 +397,12 @@ class SystemPage extends MovieClip
       {
          case SystemPage.CHARACTER_SELECTION_STATE:
             gfx.io.GameDelegate.call("PlaySound",["UIMenuOK"]);
-            gfx.io.GameDelegate.call("CharacterSelected",[this.SaveLoadListHolder.selectedIndex]);
+            // Skyrim 1.7.x dropped this call (SaveLoadPanel reports the selection itself);
+            // older runtimes still expect it.
+            if(!this.IsVersionAtLeast(1, 7, 0))
+            {
+               gfx.io.GameDelegate.call("CharacterSelected",[this.SaveLoadListHolder.selectedIndex]);
+            }
             break;
          case SystemPage.SAVE_LOAD_CONFIRM_STATE:
          case SystemPage.TRANSITIONING:
@@ -388,7 +415,7 @@ class SystemPage extends MovieClip
                   if(this.SaveLoadListHolder.isSaving)
                   {
                      this.ConfirmPanel._visible = false;
-                     if(this.iPlatform == Shared.ButtonChange.PLATFORM_360)
+                     if(this.iPlatform == Shared.ButtonChange.PLATFORM_360 || this.iPlatform == Shared.ButtonChange.PLATFORM_NX || this.iPlatform == Shared.ButtonChange.PLATFORM_NX_MOUSE)
                      {
                         this.ErrorText.SetText("$Saving content. Please don\'t turn off your console.");
                      }
@@ -497,13 +524,23 @@ class SystemPage extends MovieClip
             this.SettingsPanel.bCloseToMainState = true;
             break;
          case SystemPage.INPUT_MAPPING_STATE:
+            if(this.iPlatform == Shared.ButtonChange.PLATFORM_NX || this.iPlatform == Shared.ButtonChange.PLATFORM_NX_MOUSE)
+            {
+               gfx.io.GameDelegate.call("PlaySound",["UIMenuCancel"]);
+               this.EndState();
+               this.StartState(SystemPage.CONTROLS_CATEGORY_STATE);
+               this.ControlsPanel.bCloseToMainState = true;
+               break;
+            }
+            this.InputMappingPanel.bCloseToMainState = true;
+         case SystemPage.CONTROLS_CATEGORY_STATE:
          case SystemPage.SETTINGS_CATEGORY_STATE:
             gfx.io.GameDelegate.call("PlaySound",["UIMenuCancel"]);
             if(this.bSettingsChanged)
             {
                this.ErrorText.SetText("$Saving...");
                this.bSavingSettings = true;
-               if(this.iCurrentState == SystemPage.INPUT_MAPPING_STATE)
+               if(this.iCurrentState == SystemPage.INPUT_MAPPING_STATE || this.iCurrentState == SystemPage.CONTROLS_CATEGORY_STATE)
                {
                   this.iSavingSettingsTimerID = setInterval(this,"SaveControls",1000);
                   break;
@@ -634,21 +671,39 @@ class SystemPage extends MovieClip
                return;
                
             case this.IDX_CONTROLS:
-               if(this.MappingList.entryList.length == 0)
+               if(this.iPlatform == Shared.ButtonChange.PLATFORM_NX || this.iPlatform == Shared.ButtonChange.PLATFORM_NX_MOUSE)
                {
-                  gfx.io.GameDelegate.call("RequestInputMappings",[this.MappingList.entryList]);
-                  this.MappingList.entryList.sort(this.inputMappingSort);
-                  this.MappingList.InvalidateData();
+                  this.InputMappingPanel.TitleGroup._visible = true;
+                  this.StartState(SystemPage.CONTROLS_CATEGORY_STATE);
+                  gfx.io.GameDelegate.call("PlaySound",["UIMenuOK"]);
                }
-               this.StartState(SystemPage.INPUT_MAPPING_STATE);
-               gfx.io.GameDelegate.call("PlaySound",["UIMenuOK"]);
+               else
+               {
+                  if(this.MappingList.entryList.length == 0)
+                  {
+                     gfx.io.GameDelegate.call("RequestInputMappings",[this.MappingList.entryList]);
+                     this.MappingList.entryList.sort(this.inputMappingSort);
+                     this.MappingList.InvalidateData();
+                  }
+                  this.InputMappingPanel.TitleGroup._visible = false;
+                  this.StartState(SystemPage.INPUT_MAPPING_STATE);
+                  this.InputMappingPanel.bCloseToMainState = true;
+                  gfx.io.GameDelegate.call("PlaySound",["UIMenuOK"]);
+               }
                return;
                
             case this.IDX_HELP:
                if(this.HelpList.entryList.length == 0)
                {
                   gfx.io.GameDelegate.call("PopulateHelpTopics",[this.HelpList.entryList]);
-                  this.HelpList.entryList.sort(this.doABCSort);
+                  if(this.iPlatform == Shared.ButtonChange.PLATFORM_NX || this.iPlatform == Shared.ButtonChange.PLATFORM_NX_MOUSE)
+                  {
+                     this.HelpList.entryList.sort(this.doABCSortCaseInsensitive);
+                  }
+                  else
+                  {
+                     this.HelpList.entryList.sort(this.doABCSort);
+                  }
                   this.HelpList.InvalidateData();
                }
                if(this.HelpList.entryList.length != 0)
@@ -691,6 +746,20 @@ class SystemPage extends MovieClip
          return -1;
       }
       if(aObj1.text > aObj2.text)
+      {
+         return 1;
+      }
+      return 0;
+   }
+   function doABCSortCaseInsensitive(aObj1, aObj2)
+   {
+      var _loc2_ = aObj1.text.toUpperCase();
+      var _loc1_ = aObj2.text.toUpperCase();
+      if(_loc2_ < _loc1_)
+      {
+         return -1;
+      }
+      if(_loc2_ > _loc1_)
       {
          return 1;
       }
@@ -785,7 +854,7 @@ class SystemPage extends MovieClip
       if(this.iCurrentState == SystemPage.SAVE_LOAD_STATE && !this.SaveLoadListHolder.isShowingCharacterList)
       {
          this.BottomBar_mc.SetButtonVisibility(1,true,event.index != -1 ? 100 : 50);
-         if(this.iPlatform == 0)
+         if(this.iPlatform == 0 || this.iPlatform == 7)
          {
             gfx.io.GameDelegate.call("PlaySound",["UIMenuFocus"]);
          }
@@ -846,6 +915,16 @@ class SystemPage extends MovieClip
             {
                entries.splice(4, 0, {text:"$SaveGameMissingCreationsCheck", movieType:2});
             }
+            // Skyrim 1.7.x, Switch 2 only: extra motion/mouse options (same order as vanilla).
+            if(this.iPlatform == Shared.ButtonChange.PLATFORM_NX || this.iPlatform == Shared.ButtonChange.PLATFORM_NX_MOUSE)
+            {
+               entries.splice(0,0,{text:"$NX_UseLeftHandedMouse",movieType:2});
+               entries.splice(0,0,{text:"$NX_EnableMouseControls",movieType:2});
+               entries.splice(0,0,{text:"$NX_EnableGestureAttacks",movieType:2});
+               entries.splice(0,0,{text:"$NX_EnableMotionControls",movieType:2});
+               entries.splice(5,0,{text:"$NX_InvertYMouse",movieType:2});
+               entries.splice(7,0,{text:"$NX_LookSensitivityMouse",movieType:0});
+            }
             gfx.io.GameDelegate.call("RequestGameplayOptions", [entries]);
             break;
                
@@ -866,6 +945,13 @@ class SystemPage extends MovieClip
                {text:"$General Subtitles", movieType:2},
                {text:"$DDOF Intensity", movieType:0}
             ];
+            // Skyrim 1.7.x, Switch 2 only: no brightness / depth of field sliders, one fidelity toggle instead.
+            if(this.iPlatform == Shared.ButtonChange.PLATFORM_NX || this.iPlatform == Shared.ButtonChange.PLATFORM_NX_MOUSE)
+            {
+               entries.shift();
+               entries.pop();
+               entries.splice(0,0,{text:"$VisualFidelity_Title",movieType:1,options:["$VisualFidelity_PrioritizeFidelity","$VisualFidelity_PrioritizePerformance"]});
+            }
             gfx.io.GameDelegate.call("RequestDisplayOptions", [entries]);
             break;
                
@@ -890,7 +976,7 @@ class SystemPage extends MovieClip
       }
       optionsList.entryList = entries;
       
-      if(this.iPlatform != 0)
+      if(this.iPlatform != 0 && this.iPlatform != 7)
       {
          optionsList.selectedIndex = 0;
       }
@@ -922,11 +1008,41 @@ class SystemPage extends MovieClip
       if(this.bRemapMode == false && this.iCurrentState == SystemPage.INPUT_MAPPING_STATE)
       {
          this.MappingList.disableSelection = true;
-         this.bRemapMode = true;
          this.ErrorText.SetText("$Press a button to map to this action.");
          gfx.io.GameDelegate.call("PlaySound",["UIMenuPrevNext"]);
-         gfx.io.GameDelegate.call("StartRemapMode",[event.entry.text,this.MappingList.entryList]);
+         this.CachedRemapEvent = event.entry.text;
+         this.iDebounceRemapModeID = setInterval(this,"SetRemapMode",200);
       }
+   }
+   function SetRemapMode()
+   {
+      if(this.iDebounceRemapModeID != undefined)
+      {
+         clearInterval(this.iDebounceRemapModeID);
+      }
+      this.bRemapMode = true;
+      gfx.io.GameDelegate.call("StartRemapMode",[this.CachedRemapEvent,this.MappingList.entryList]);
+   }
+   function onControlsCategoryPress(event)
+   {
+      this.ControlsPanel.bCloseToMainState = false;
+      this.EndState();
+      this.MappingList.entryList.splice(0,this.MappingList.entryList.length);
+      this.MappingList.selectedIndex = 0;
+      gfx.io.GameDelegate.call("RequestInputMappings",[this.MappingList.entryList,this.ControlsList.selectedIndex]);
+      switch(this.ControlsList.selectedIndex)
+      {
+         case 0:
+            this.MappingTitleText.SetText("$NX_Gamepad");
+            break;
+         case 1:
+            this.MappingTitleText.SetText("$NX_JoyCon2Mouse");
+      }
+      this.MappingList.entryList.sort(this.inputMappingSort);
+      this.MappingList.InvalidateData();
+      this.StartState(SystemPage.INPUT_MAPPING_STATE);
+      this.InputMappingPanel.bCloseToMainState = false;
+      gfx.io.GameDelegate.call("PlaySound",["UIMenuOK"]);
    }
    function onFinishRemapMode(abSuccess)
    {
@@ -978,9 +1094,23 @@ class SystemPage extends MovieClip
    }
    function ResetControlsToDefaults()
    {
-      gfx.io.GameDelegate.call("ResetControlsToDefaults",[this.MappingList.entryList]);
+      if(this.iPlatform == Shared.ButtonChange.PLATFORM_NX || this.iPlatform == Shared.ButtonChange.PLATFORM_NX_MOUSE)
+      {
+         gfx.io.GameDelegate.call("ResetControlsToDefaults_Ounce",[this.MappingList.entryList,this.ControlsList.selectedIndex]);
+      }
+      else
+      {
+         gfx.io.GameDelegate.call("ResetControlsToDefaults",[this.MappingList.entryList]);
+      }
       this.MappingList.entryList.splice(0,this.MappingList.entryList.length);
-      gfx.io.GameDelegate.call("RequestInputMappings",[this.MappingList.entryList]);
+      if(this.iPlatform == Shared.ButtonChange.PLATFORM_NX || this.iPlatform == Shared.ButtonChange.PLATFORM_NX_MOUSE)
+      {
+         gfx.io.GameDelegate.call("RequestInputMappings",[this.MappingList.entryList,this.ControlsList.selectedIndex]);
+      }
+      else
+      {
+         gfx.io.GameDelegate.call("RequestInputMappings",[this.MappingList.entryList]);
+      }
       this.MappingList.entryList.sort(this.inputMappingSort);
       this.MappingList.UpdateList();
       this.bSettingsChanged = true;
@@ -988,6 +1118,7 @@ class SystemPage extends MovieClip
    function onHelpItemPress()
    {
       trace("OnHelpItemPress");
+      this.SelectedHelpIndex = this.HelpList.selectedIndex;
       gfx.io.GameDelegate.call("RequestHelpText",[this.HelpList.selectedEntry.index,this.HelpTitleText,this.HelpText]);
       this.ApplyHelpTextButtonArt();
       this.HelpListPanel.bCloseToMainState = false;
@@ -1081,45 +1212,46 @@ class SystemPage extends MovieClip
       switch(aiState)
       {
          case SystemPage.CHARACTER_SELECTION_STATE:
-            this.BottomBar_mc.SetButtonInfo(1,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(1,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             break;
          case SystemPage.SAVE_LOAD_STATE:
-            this.BottomBar_mc.SetButtonInfo(1,"$Delete",{PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X"});
+            this.BottomBar_mc.SetButtonInfo(1,"$Delete",{PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",NXArt:"NX_Y"});
             if(!this.SaveLoadListHolder.isSaving)
             {
-               this.BottomBar_mc.SetButtonInfo(2,"$CharacterSelection",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y"});
-               this.BottomBar_mc.SetButtonInfo(3,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+               this.BottomBar_mc.SetButtonInfo(2,"$CharacterSelection",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X"});
+               this.BottomBar_mc.SetButtonInfo(3,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             }
             else
             {
-               this.BottomBar_mc.SetButtonInfo(2,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+               this.BottomBar_mc.SetButtonInfo(2,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             }
             break;
          case SystemPage.INPUT_MAPPING_STATE:
             _loc2_ = 1;
             if(!this.bIsRemoteDevice)
             {
-               this.BottomBar_mc.SetButtonInfo(1,"$Defaults",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y"});
+               this.BottomBar_mc.SetButtonInfo(1,"$Defaults",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X"});
                _loc2_ = 2;
             }
-            this.BottomBar_mc.SetButtonInfo(_loc2_,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(_loc2_,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             break;
          case SystemPage.OPTIONS_LISTS_STATE:
-            this.BottomBar_mc.SetButtonInfo(1,"$Defaults",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y"});
+            this.BottomBar_mc.SetButtonInfo(1,"$Defaults",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X"});
             _loc2_ = 2;
             if(this.bShowKinectTunerButton && this.iPlatform == 2 && this.SettingsList.selectedIndex == 0)
             {
-               this.BottomBar_mc.SetButtonInfo(2,"$Kinect Tuner",{PCArt:"K",XBoxArt:"360_RB",PS3Art:"PS3_RB"});
+               this.BottomBar_mc.SetButtonInfo(2,"$Kinect Tuner",{PCArt:"K",XBoxArt:"360_RB",PS3Art:"PS3_RB",NXArt:"NX_RB"});
                _loc2_ = 3;
             }
-            this.BottomBar_mc.SetButtonInfo(_loc2_,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(_loc2_,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             break;
          case SystemPage.CREATIONS_TEXT_STATE:
          case SystemPage.CREATIONS_LIST_STATE:
          case SystemPage.HELP_TEXT_STATE:
          case SystemPage.HELP_LIST_STATE:
+         case SystemPage.CONTROLS_CATEGORY_STATE:
          case SystemPage.SETTINGS_CATEGORY_STATE:
-            this.BottomBar_mc.SetButtonInfo(1,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(1,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
          case SystemPage.CHARACTER_LOAD_STATE:
          case SystemPage.PC_QUIT_LIST_STATE:
          case SystemPage.SAVE_LOAD_CONFIRM_STATE:
@@ -1127,9 +1259,8 @@ class SystemPage extends MovieClip
          case SystemPage.PC_QUIT_CONFIRM_STATE:
          case SystemPage.DELETE_SAVE_CONFIRM_STATE:
          case SystemPage.DEFAULT_SETTINGS_CONFIRM_STATE:
-         default:
-            return;
       }
+      this.BottomBar_mc.PositionButtons();
    }
    function StartState(aiState)
    {
@@ -1145,7 +1276,7 @@ class SystemPage extends MovieClip
             this.BottomBar_mc.SetButtonVisibility(3,false);
             break;
          case SystemPage.CHARACTER_SELECTION_STATE:
-            this.BottomBar_mc.SetButtonInfo(1,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(1,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             this.BottomBar_mc.SetButtonVisibility(1,true,100);
             this.BottomBar_mc.SetButtonVisibility(2,false);
             this.BottomBar_mc.SetButtonVisibility(3,false);
@@ -1153,17 +1284,17 @@ class SystemPage extends MovieClip
          case SystemPage.SAVE_LOAD_STATE:
             this.SaveLoadListHolder.isShowingCharacterList = false;
             this.SystemDivider.gotoAndStop("Left");
-            this.BottomBar_mc.SetButtonInfo(1,"$Delete",{PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X"});
+            this.BottomBar_mc.SetButtonInfo(1,"$Delete",{PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",NXArt:"NX_Y"});
             this.BottomBar_mc.SetButtonVisibility(1,true,100);
             if(!this.SaveLoadListHolder.isSaving)
             {
-               this.BottomBar_mc.SetButtonInfo(2,"$CharacterSelection",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y"});
+               this.BottomBar_mc.SetButtonInfo(2,"$CharacterSelection",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X"});
                this.BottomBar_mc.SetButtonVisibility(2,true,100);
-               this.BottomBar_mc.SetButtonInfo(3,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+               this.BottomBar_mc.SetButtonInfo(3,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
                this.BottomBar_mc.SetButtonVisibility(3,true,100);
                break;
             }
-            this.BottomBar_mc.SetButtonInfo(2,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(2,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             this.BottomBar_mc.SetButtonVisibility(2,true,100);
             break;
          case SystemPage.INPUT_MAPPING_STATE:
@@ -1171,7 +1302,7 @@ class SystemPage extends MovieClip
             _loc2_ = 1;
             if(!this.bIsRemoteDevice)
             {
-               this.BottomBar_mc.SetButtonInfo(1,"$Defaults",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y"});
+               this.BottomBar_mc.SetButtonInfo(1,"$Defaults",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X"});
                this.BottomBar_mc.SetButtonVisibility(1,true,100);
                this.bDefaultsButtonVisible = true;
                _loc2_ = 2;
@@ -1181,17 +1312,17 @@ class SystemPage extends MovieClip
                this.BottomBar_mc.SetButtonVisibility(2,false);
                this.bDefaultsButtonVisible = false;
             }
-            this.BottomBar_mc.SetButtonInfo(_loc2_,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(_loc2_,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             this.BottomBar_mc.SetButtonVisibility(_loc2_,true,100);
             break;
          case SystemPage.OPTIONS_LISTS_STATE:
-            this.BottomBar_mc.SetButtonInfo(1,"$Defaults",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y"});
+            this.BottomBar_mc.SetButtonInfo(1,"$Defaults",{PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X"});
             this.BottomBar_mc.SetButtonVisibility(1,true,100);
             this.bDefaultsButtonVisible = true;
             _loc2_ = 2;
             if(this.bShowKinectTunerButton && this.iPlatform == 2 && this.SettingsList.selectedIndex == 0)
             {
-               this.BottomBar_mc.SetButtonInfo(2,"$Kinect Tuner",{PCArt:"K",XBoxArt:"360_RB",PS3Art:"PS3_RB"});
+               this.BottomBar_mc.SetButtonInfo(2,"$Kinect Tuner",{PCArt:"K",XBoxArt:"360_RB",PS3Art:"PS3_RB",NXArt:"NX_RB"});
                this.BottomBar_mc.SetButtonVisibility(2,true,100);
                _loc2_ = 3;
             }
@@ -1199,15 +1330,16 @@ class SystemPage extends MovieClip
             {
                this.BottomBar_mc.SetButtonVisibility(3,false);
             }
-            this.BottomBar_mc.SetButtonInfo(_loc2_,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(_loc2_,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             this.BottomBar_mc.SetButtonVisibility(_loc2_,true,100);
             break;
          case SystemPage.CREATIONS_TEXT_STATE:
          case SystemPage.CREATIONS_LIST_STATE:
          case SystemPage.HELP_TEXT_STATE:
          case SystemPage.HELP_LIST_STATE:
+         case SystemPage.CONTROLS_CATEGORY_STATE:
          case SystemPage.SETTINGS_CATEGORY_STATE:
-            this.BottomBar_mc.SetButtonInfo(1,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B"});
+            this.BottomBar_mc.SetButtonInfo(1,"$Cancel",{PCArt:this.CancelButtonMappedTo,XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
             this.BottomBar_mc.SetButtonVisibility(1,true,100);
          case SystemPage.PC_QUIT_LIST_STATE:
             this.SystemDivider.gotoAndStop("Left");
@@ -1285,6 +1417,16 @@ class SystemPage extends MovieClip
                this.SystemDivider.gotoAndStop("Right");
             }
             break;
+         case SystemPage.CONTROLS_CATEGORY_STATE:
+            this.BottomBar_mc.SetButtonVisibility(1,false);
+            this.BottomBar_mc.SetButtonVisibility(2,false);
+            this.BottomBar_mc.SetButtonVisibility(3,false);
+            this.ControlsList.disableInput = true;
+            if(this.ControlsPanel.bCloseToMainState != false)
+            {
+               this.SystemDivider.gotoAndStop("Right");
+            }
+            break;
          case SystemPage.PC_QUIT_LIST_STATE:
             this.SystemDivider.gotoAndStop("Right");
       }
@@ -1304,6 +1446,8 @@ class SystemPage extends MovieClip
             return this.SettingsPanel;
          case SystemPage.OPTIONS_LISTS_STATE:
             return this.OptionsListsPanel;
+         case SystemPage.CONTROLS_CATEGORY_STATE:
+            return this.ControlsPanel;
          case SystemPage.INPUT_MAPPING_STATE:
             return this.InputMappingPanel;
          case SystemPage.CHARACTER_LOAD_STATE:
@@ -1346,6 +1490,10 @@ class SystemPage extends MovieClip
          case SystemPage.OPTIONS_LISTS_STATE:
             gfx.managers.FocusHandler.instance.setFocus(this.OptionsListsPanel.OptionsLists.List_mc,0);
             break;
+         case SystemPage.CONTROLS_CATEGORY_STATE:
+            this.ControlsList.disableInput = false;
+            gfx.managers.FocusHandler.instance.setFocus(this.ControlsList,0);
+            break;
          case SystemPage.INPUT_MAPPING_STATE:
             gfx.managers.FocusHandler.instance.setFocus(this.MappingList,0);
             break;
@@ -1354,6 +1502,10 @@ class SystemPage extends MovieClip
          case SystemPage.SAVE_LOAD_STATE:
             gfx.managers.FocusHandler.instance.setFocus(this.SaveLoadListHolder.List_mc,0);
             this.SaveLoadListHolder.List_mc.disableSelection = false;
+            if(this.SaveLoadListHolder.List_mc.selectedIndex == -1)
+            {
+               this.SaveLoadListHolder.List_mc.selectedIndex = 0;
+            }
             break;
          case SystemPage.SAVE_LOAD_CONFIRM_STATE:
          case SystemPage.QUIT_CONFIRM_STATE:
@@ -1388,25 +1540,35 @@ class SystemPage extends MovieClip
       trace("SystemPage::SetPlatform: aiPlatform " + aiPlatform.toString() + ", aSwapPS3 " + abPS3Switch.toString());
       this.iPlatform = aiPlatform;
       this.PS3Switch = abPS3Switch;
-      this.ConfirmPanel.ButtonRect.AcceptGamepadButton._visible = aiPlatform != 0;
-      this.ConfirmPanel.ButtonRect.CancelGamepadButton._visible = aiPlatform != 0;
-      this.ConfirmPanel.ButtonRect.AcceptMouseButton._visible = aiPlatform == 0;
-      this.ConfirmPanel.ButtonRect.CancelMouseButton._visible = aiPlatform == 0;
+      this.ConfirmPanel.ButtonRect.AcceptGamepadButton._visible = aiPlatform != 0 && aiPlatform != 7;
+      this.ConfirmPanel.ButtonRect.CancelGamepadButton._visible = aiPlatform != 0 && aiPlatform != 7;
+      this.ConfirmPanel.ButtonRect.AcceptMouseButton._visible = aiPlatform == 0 || aiPlatform == 7;
+      this.ConfirmPanel.ButtonRect.CancelMouseButton._visible = aiPlatform == 0 || aiPlatform == 7;
       this.BottomBar_mc.SetPlatform(aiPlatform,abPS3Switch);
       this.CategoryList.SetPlatform(aiPlatform,abPS3Switch);
       this.MappingList.SetPlatform(aiPlatform,abPS3Switch);
+      this.SettingsList.SetPlatform(aiPlatform,abPS3Switch);
+      this.ControlsList.SetPlatform(aiPlatform,abPS3Switch);
+      this.PCQuitList.SetPlatform(aiPlatform,abPS3Switch);
+      this.HelpList.SetPlatform(aiPlatform,abPS3Switch);
+      this.CreationsList.SetPlatform(aiPlatform,abPS3Switch);
+      this.OptionsListsPanel.OptionsLists.List_mc.SetPlatform(aiPlatform,abPS3Switch);
       this.HelpButtonHolder.SetPlatform(aiPlatform,abPS3Switch);
       this.CreationsButtonHolder.SetPlatform(aiPlatform,abPS3Switch);
+      if(this.iCurrentState == SystemPage.HELP_TEXT_STATE)
+      {
+         this.onHelpItemPress();
+      }
       var _loc4_;
-      if(aiPlatform != 0)
+      if(aiPlatform != 0 && aiPlatform != 7)
       {
          this.ConfirmPanel.ButtonRect.AcceptGamepadButton.SetPlatform(aiPlatform,abPS3Switch);
          this.ConfirmPanel.ButtonRect.CancelGamepadButton.SetPlatform(aiPlatform,abPS3Switch);
-         this.SettingsList.selectedIndex = 0;
-         this.PCQuitList.selectedIndex = 0;
-         this.HelpList.selectedIndex = 0;
-         this.CreationsList.selectedIndex = 0;
-         this.MappingList.selectedIndex = 0;
+      }
+      else if(aiPlatform == 7)
+      {
+         this.ConfirmPanel.ButtonRect.AcceptMouseButton.SetPlatform(aiPlatform,abPS3Switch);
+         this.ConfirmPanel.ButtonRect.CancelMouseButton.SetPlatform(aiPlatform,abPS3Switch);
       }
       else
       {

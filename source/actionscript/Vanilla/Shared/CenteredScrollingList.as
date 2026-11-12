@@ -166,6 +166,14 @@ class Shared.CenteredScrollingList extends Shared.BSScrollingList
             aEntryClip._alpha = (dist == 0) ? 100 : Math.max(20, 60 - dist * 10);
          }
       }
+
+      // Skyrim 1.7.x: list entries may carry a status icon (the main menu's
+      // Creations "new content" marker); entries opt out with showIcon:false.
+      if (aEntryObject.showIcon == false) {
+         aEntryClip.statusIcon._visible = false;
+      } else {
+         aEntryClip.statusIcon._visible = true;
+      }
       
       this.SetEntryText(aEntryClip, aEntryObject);
    }

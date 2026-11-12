@@ -1,8 +1,11 @@
 class CreditsMenu extends MovieClip
 {
+   var CreditsText2_tf;
    var CreditsText_tf;
    var iUpTimerID;
    var textField;
+   var textField2;
+   var CreditsText2HasText = false;
    static var EndY = -100;
    static var TextYRate = 1;
    function CreditsMenu()
@@ -10,22 +13,34 @@ class CreditsMenu extends MovieClip
       super();
       this.CreditsText_tf = this.textField;
       this.CreditsText_tf.verticalAutoSize = "top";
+      this.CreditsText2_tf = this.textField2;
+      this.CreditsText2_tf.verticalAutoSize = "top";
       Mouse.addListener(this);
       gfx.managers.FocusHandler.instance.setFocus(this,0);
    }
    function onCodeObjectInit()
    {
       this.CreditsText_tf.SetText(" ",true);
-      _root.CodeObj.requestCredits(this.CreditsText_tf);
+      this.CreditsText2_tf.SetText("",true);
+      _root.CodeObj.requestCredits(this.CreditsText_tf,this.CreditsText2_tf);
       CreditsMenu.TextYRate = _root.CodeObj.getScrollSpeed();
+      this.CreditsText2HasText = this.CreditsText2_tf.text.length > 0;
    }
    function onEnterFrame()
    {
       if(this.iUpTimerID == undefined)
       {
          this.CreditsText_tf._y -= CreditsMenu.TextYRate;
+         if(this.CreditsText2HasText && this.CreditsText_tf._y + this.CreditsText_tf._height <= Stage.height)
+         {
+            this.CreditsText2_tf._y -= CreditsMenu.TextYRate;
+         }
       }
-      if(this.CreditsText_tf._y + this.CreditsText_tf._height <= CreditsMenu.EndY)
+      if(!this.CreditsText2HasText && this.CreditsText_tf._y + this.CreditsText_tf._height <= CreditsMenu.EndY)
+      {
+         _root.CodeObj.closeMenu();
+      }
+      else if(this.CreditsText2HasText && this.CreditsText2_tf._y + this.CreditsText2_tf._height <= CreditsMenu.EndY)
       {
          _root.CodeObj.closeMenu();
       }
@@ -68,10 +83,18 @@ class CreditsMenu extends MovieClip
       if(aiDelta < 0)
       {
          this.CreditsText_tf._y += aiDelta;
+         if(this.CreditsText2HasText && this.CreditsText_tf._y + this.CreditsText_tf._height <= Stage.height)
+         {
+            this.CreditsText2_tf._y += aiDelta;
+         }
       }
       else if(aiDelta > 0 && this.CreditsText_tf._y < 140)
       {
          this.CreditsText_tf._y += aiDelta;
+         if(this.CreditsText2HasText && this.CreditsText_tf._y + this.CreditsText_tf._height <= Stage.height)
+         {
+            this.CreditsText2_tf._y += aiDelta;
+         }
          if(this.iUpTimerID != undefined)
          {
             clearInterval(this.iUpTimerID);

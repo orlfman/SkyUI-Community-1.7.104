@@ -5,23 +5,23 @@ class BottomButtons extends MovieClip
    var bg_mc;
    var dispatchEvent;
    var onEnterFrame;
-   static var ACCEPT = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",Label:"$Accept",KeyCode:13};
-   static var ENTER_TEXT = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",Label:"$Enter Text",KeyCode:13};
-   static var CANCEL = {PCArt:"Esc",XBoxArt:"360_B",PS3Art:"PS3_B",Label:"$Back",KeyCode:9};
-   static var LIBRARY_LOGIN = {PCArt:"Home",XBoxArt:"360_Y",PS3Art:"PS3_Y",Label:"$Mod_MyLibrary",KeyCode:36};
-   static var LIBRARY = {PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",Label:"$Mod_MyLibrary",KeyCode:84};
-   static var DETAILS = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",Label:"$Mod_Details",KeyCode:13};
-   static var ENABLE_MOD = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",Label:"$Mod_LibraryEnable",KeyCode:13};
-   static var REORDER_MOD = {PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",Label:"$Mod_Reorder",KeyCode:88};
-   static var DONE_REORDER_MOD = {PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",Label:"$Done",KeyCode:88};
-   static var DELETE_MOD = {PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",Label:"$Mod_LibraryDelete",KeyCode:84};
-   static var SEARCH = {PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",Label:"$Mod_Search",KeyCode:88};
-   static var SEARCH_CONFIRM = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",Label:"$Mod_Search",KeyCode:13};
-   static var OPTIONS = {PCArt:"V",XBoxArt:"360_Back",PS3Art:"PS3_Back",Label:"$Mod_AccountSettings",KeyCode:86};
-   static var CONFIRM = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",Label:"$Select",KeyCode:13};
-   static var MOD_TIME_FILTER = {PCArt:"Home",PCArtSecondary:"End",XBoxArt:"360_LT",XBoxArtSecondary:"360_RT",PS3Art:"PS3_LT",PS3ArtSecondary:"PS3_RT",Label:"$TimeFilterToday",KeyCode:36,KeyCodeSecondary:35};
-   static var NEW_ACCOUNT = {PCArt:"End",XBoxArt:"360_X",PS3Art:"PS3_X",Label:"$Login_CreateNew",KeyCode:35};
-   static var TOGGLE = {PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",Label:"$Toggle",KeyCode:84};
+   static var ACCEPT = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",NXArt:"NX_A",Label:"$Accept",KeyCode:13};
+   static var ENTER_TEXT = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",NXArt:"NX_A",Label:"$Enter Text",KeyCode:13};
+   static var CANCEL = {PCArt:"Esc",XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B",Label:"$Back",KeyCode:9};
+   static var LIBRARY_LOGIN = {PCArt:"Home",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X",Label:"$Mod_MyLibrary",KeyCode:36};
+   static var LIBRARY = {PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X",Label:"$Mod_MyLibrary",KeyCode:84};
+   static var DETAILS = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",NXArt:"NX_A",Label:"$Mod_Details",KeyCode:13};
+   static var ENABLE_MOD = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",NXArt:"NX_A",Label:"$Mod_LibraryEnable",KeyCode:13};
+   static var REORDER_MOD = {PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",NXArt:"NX_Y",Label:"$Mod_Reorder",KeyCode:88};
+   static var DONE_REORDER_MOD = {PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",NXArt:"NX_Y",Label:"$Done",KeyCode:88};
+   static var DELETE_MOD = {PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X",Label:"$Mod_LibraryDelete",KeyCode:84};
+   static var SEARCH = {PCArt:"X",XBoxArt:"360_X",PS3Art:"PS3_X",NXArt:"NX_Y",Label:"$Mod_Search",KeyCode:88};
+   static var SEARCH_CONFIRM = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",NXArt:"NX_A",Label:"$Mod_Search",KeyCode:13};
+   static var OPTIONS = {PCArt:"V",XBoxArt:"360_Back",PS3Art:"PS3_Back",NXArt:"NX_Minus",Label:"$Mod_AccountSettings",KeyCode:86};
+   static var CONFIRM = {PCArt:"Enter",XBoxArt:"360_A",PS3Art:"PS3_A",NXArt:"NX_A",Label:"$Select",KeyCode:13};
+   static var MOD_TIME_FILTER = {PCArt:"Home",PCArtSecondary:"End",XBoxArt:"360_LT",XBoxArtSecondary:"360_RT",PS3Art:"PS3_LT",PS3ArtSecondary:"PS3_RT",NXArt:"NX_LT",NXArtSecondary:"NX_RT",Label:"$TimeFilterToday",KeyCode:36,KeyCodeSecondary:35};
+   static var NEW_ACCOUNT = {PCArt:"End",XBoxArt:"360_X",PS3Art:"PS3_X",NXArt:"NX_Y",Label:"$Login_CreateNew",KeyCode:35};
+   static var TOGGLE = {PCArt:"T",XBoxArt:"360_Y",PS3Art:"PS3_Y",NXArt:"NX_X",Label:"$Toggle",KeyCode:84};
    static var BUTTON_CLICKED = "BottomButtons_ButtonClicked";
    static var BUTTON_HORIZONTAL_SPACING = 26;
    static var BUTTON_UPDATE_TIMER = 70;
@@ -149,7 +149,7 @@ class BottomButtons extends MovieClip
    }
    function GetButtonID(platform)
    {
-      return platform != 0 ? this.GamepadButton : this.MouseButton;
+      return !(platform == 0 || platform == 7) ? this.GamepadButton : this.MouseButton;
    }
    function Reposition()
    {

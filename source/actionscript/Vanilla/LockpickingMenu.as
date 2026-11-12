@@ -40,6 +40,7 @@ class LockpickingMenu extends MovieClip
       gfx.io.GameDelegate.addCallBack("SetLockInfo",this,"SetLockInfo");
       gfx.io.GameDelegate.addCallBack("SetPickMinMax",this,"SetPickMinMax");
       gfx.io.GameDelegate.addCallBack("ToggleDebugMode",this,"ToggleDebugMode");
+      gfx.io.GameDelegate.addCallBack("UpdateLockPickingButtonPrompt",this,"UpdateLockPickingButtonPrompt");
       this.DebugDisplay_mc._visible = false;
       this.BottomBar_mc._visible = false;
       this.InfoRect_mc.LockLevelText.textAutoSize = "shrink";
@@ -110,5 +111,12 @@ class LockpickingMenu extends MovieClip
          _loc3_.SetText(_loc3_.text + ": 99+");
       }
       this.BottomBar_mc._visible = true;
+   }
+   function UpdateLockPickingButtonPrompt(asRotateLock, asRotatePick)
+   {
+      this.ButtonRect_mc.RotateLockButton.NXArt = asRotateLock;
+      this.ButtonRect_mc.RotateLockButton.RefreshArt();
+      this.ButtonRect_mc.RotatePickButton.NXArt = asRotatePick;
+      this.ButtonRect_mc.RotatePickButton.RefreshArt();
    }
 }

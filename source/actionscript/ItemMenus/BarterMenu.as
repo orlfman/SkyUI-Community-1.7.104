@@ -124,6 +124,8 @@ class BarterMenu extends ItemMenu
    function onItemCardSubMenuAction(event)
    {
       super.onItemCardSubMenuAction(event);
+      // Skyrim 1.7.x: the barter menu now reports the quantity slider like the other item menus.
+      gfx.io.GameDelegate.call("QuantitySliderOpen",[event.opening]);
       if(event.menu == "quantity")
       {
          if(event.opening)

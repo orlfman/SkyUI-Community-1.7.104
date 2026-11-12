@@ -541,13 +541,13 @@ Add_SWF(quest_journal
         Components/Meter.as
         SaveLoadPanel.as
         Shared {
-            BSScrollingList.as
             ButtonTextArtHolder.as
             CenteredScrollingList.as
             GlobalFunc.as
             ListFilterer.as
         }
     }
+    VanillaSystem/Shared/BSScrollingList.as
 )
 
 Add_SWF(racesex_menu
@@ -747,7 +747,6 @@ Add_SWF(startmenu
         SaveLoadPanel.as
         StartMenu.as
         Shared {
-            BSScrollingList.as
             ButtonChange.as
             CenteredScrollingList.as
             GlobalFunc.as
@@ -755,6 +754,7 @@ Add_SWF(startmenu
             Proxy.as
         }
     }
+    VanillaSystem/Shared/BSScrollingList.as
 )
 
 Add_SWF(statsmenu

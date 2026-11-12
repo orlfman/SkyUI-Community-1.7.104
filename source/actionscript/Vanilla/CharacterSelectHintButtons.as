@@ -3,8 +3,10 @@ class CharacterSelectHintButtons extends MovieClip
    var DURANGO_Y;
    var KEY_T;
    var Label_mc;
+   var NX_X;
    var PS_Y;
    var buttonArt_Durango;
+   var buttonArt_NX;
    var buttonArt_Orbis;
    var buttonArt_keyboard;
    var dispatchEvent;
@@ -18,6 +20,8 @@ class CharacterSelectHintButtons extends MovieClip
    static var CONTROLLER_ORBIS = 3;
    static var CONTROLLER_SCARLETT = 4;
    static var CONTROLLER_PROSPERO = 5;
+   static var CONTROLLER_NX = 6;
+   static var CONTROLLER_NX_MOUSE = 7;
    function CharacterSelectHintButtons()
    {
       super();
@@ -31,6 +35,8 @@ class CharacterSelectHintButtons extends MovieClip
       this.buttonArt_Durango._visible = false;
       this.buttonArt_Orbis = this.PS_Y;
       this.buttonArt_Orbis._visible = false;
+      this.buttonArt_NX = this.NX_X;
+      this.buttonArt_NX._visible = false;
       this.Label_mc = this.textField;
       this.Label_mc.text = "$CharacterSelection";
       switch(aiPlatform)
@@ -44,6 +50,15 @@ class CharacterSelectHintButtons extends MovieClip
          case CharacterSelectHintButtons.CONTROLLER_DURANGO:
             this.buttonArt_Durango._visible = true;
             this.gotoAndStop(2);
+            break;
+         case CharacterSelectHintButtons.CONTROLLER_NX:
+            this.buttonArt_NX._visible = true;
+            this.gotoAndStop(2);
+            break;
+         case CharacterSelectHintButtons.CONTROLLER_NX_MOUSE:
+            this.buttonArt_NX._visible = true;
+            this.gotoAndStop(1);
+            this.EnableMouseControl();
             break;
          case CharacterSelectHintButtons.CONTROLLER_ORBIS:
          case CharacterSelectHintButtons.CONTROLLER_PROSPERO:

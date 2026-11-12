@@ -32,9 +32,9 @@ class TrainingMenu extends MovieClip
    function onLoad()
    {
       this.AcceptButton.label = "$Train";
-      this.AcceptButton.SetArt({PCArt:"E",XBoxArt:"360_A",PS3Art:"PS3_A"});
+      this.AcceptButton.SetArt({PCArt:"E",XBoxArt:"360_A",PS3Art:"PS3_A",NXArt:"NX_A"});
       this.ExitButton.label = "$Exit";
-      this.ExitButton.SetArt({PCArt:"Tab",XBoxArt:"360_B",PS3Art:"PS3_B"});
+      this.ExitButton.SetArt({PCArt:"Tab",XBoxArt:"360_B",PS3Art:"PS3_B",NXArt:"NX_B"});
       this.AcceptButton.addEventListener("click",this,"OnAcceptClick");
       this.ExitButton.addEventListener("click",this,"OnExitClick");
    }

@@ -38,6 +38,9 @@ class MessageBox extends MovieClip
    static var HOTKEY_NO = 78; // N
    static var HOTKEY_YES_TO_ALL = 65; // A
 
+   static var PLATFORM_NX = 6;
+   static var PLATFORM_NX_MOUSE = 7;
+
    function MessageBox()
    {
       super();
@@ -386,6 +389,29 @@ class MessageBox extends MovieClip
 
    function SetPlatform(aiPlatform, abPS3Switch)
    {
+      var _loc2_;
+      if(this.iPlatform == MessageBox.PLATFORM_NX && aiPlatform == MessageBox.PLATFORM_NX_MOUSE)
+      {
+         _loc2_ = 0;
+         while(_loc2_ < this.MessageButtons.length)
+         {
+            this.MessageButtons[_loc2_].disableFocus = true;
+            if(this.MessageButtons[_loc2_].focused)
+            {
+               this.MessageButtons[_loc2_].focused = 0;
+            }
+            _loc2_ = _loc2_ + 1;
+         }
+      }
+      else if(this.iPlatform == MessageBox.PLATFORM_NX_MOUSE && aiPlatform == MessageBox.PLATFORM_NX)
+      {
+         _loc2_ = 0;
+         while(_loc2_ < this.MessageButtons.length)
+         {
+            this.MessageButtons[_loc2_].disableFocus = false;
+            _loc2_ = _loc2_ + 1;
+         }
+      }
       this.iPlatform = aiPlatform;
       
       if(this.MessageButtons.length > 0) {

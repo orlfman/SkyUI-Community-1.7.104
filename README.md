@@ -1,5 +1,8 @@
 # SkyUI SE Community Update (6.0+)
 
+> **Branch `port/skyrim-1.7.104`:** menus rebased onto Skyrim SE 1.7.104 (the Switch 2
+> unification update) and built against SKSE64 2.3.1. See [PORT-1.7.104.md](PORT-1.7.104.md).
+
 ## Building
 
 ### Prerequisites
@@ -77,6 +80,14 @@ Alternatively, from the command line (ensure `SkyrimSE_PATH` is exported first):
 cmake --preset debug
 cmake --build --preset debug
 ```
+
+Optional environment variables (or `-D` cache variables) for non-default setups:
+
+| Variable | Purpose |
+|----------|---------|
+| `CreationKit_PATH` | Folder with `Papyrus Compiler/` and `Data/Source/Scripts/` when the Creation Kit is installed apart from the game (e.g. in another Steam library). Defaults to `SkyrimSE_PATH`. SKSE64 sources are still read from `SkyrimSE_PATH/Data/Scripts/Source/`. |
+| `PROTON_WINE` | Wine binary used for the Windows build tools, e.g. `.../GE-Proton11-11/files/bin/wine`. |
+| `WINEPREFIX_PATH` | Wine prefix for those tools. Defaults to the game's Steam prefix; point it at an empty folder to keep the build out of the game's prefix. |
 
 ### Output
 

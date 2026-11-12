@@ -322,7 +322,7 @@ class StatsMenu extends MovieClip
       }
       var _loc2_ = StatsMenu.StatsMenuInstance.DescriptionCardInstance;
       _loc2_.CardDescriptionTextInstance.SetText(aDescription,true);
-      this.AddPerkButtonInstance._alpha = !(this.State == StatsMenu.LEVEL_UP && abPerkMode && this.Platform != Shared.ButtonChange.PLATFORM_PC) ? 0 : 100;
+      this.AddPerkButtonInstance._alpha = !(this.State == StatsMenu.LEVEL_UP && abPerkMode && this.Platform != Shared.ButtonChange.PLATFORM_PC && this.Platform != Shared.ButtonChange.PLATFORM_NX_MOUSE) ? 0 : 100;
       this.iCurrentSkillLevel = aSkillLevel;
       this.bInPerkMode = abPerkMode;
       if(!abPerkMode)

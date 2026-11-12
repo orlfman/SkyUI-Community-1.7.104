@@ -31,6 +31,8 @@ class SaveLoadPanel extends MovieClip
    static var CONTROLLER_ORBIS = 3;
    static var CONTROLLER_SCARLETT = 4;
    static var CONTROLLER_PROSPERO = 5;
+   static var CONTROLLER_NX = 6;
+   static var CONTROLLER_NX_MOUSE = 7;
    function SaveLoadPanel()
    {
       super();
@@ -94,8 +96,9 @@ class SaveLoadPanel extends MovieClip
       trace("SaveLoadPanel::SetPlatform " + aiPlatform.toString() + ", abPS3Switch = " + abPS3Switch.toString());
       this.iPlatform = aiPlatform;
       this.PS3Switch = abPS3Switch;
+      this.SaveLoadList_mc.SetPlatform(this.iPlatform,this.PS3Switch);
       var _loc2_;
-      if(this.iPlatform == SaveLoadPanel.CONTROLLER_PC)
+      if(this.iPlatform == SaveLoadPanel.CONTROLLER_PC || this.iPlatform == SaveLoadPanel.CONTROLLER_NX_MOUSE)
       {
          this.BackMouseButton.SetPlatform(this.iPlatform);
          this.SelectMouseButton.SetPlatform(this.iPlatform);
@@ -109,8 +112,11 @@ class SaveLoadPanel extends MovieClip
          this.BackGamepadButton.SetPlatform(this.iPlatform,this.PS3Switch);
          this.SelectGamepadButton.SetPlatform(this.iPlatform,this.PS3Switch);
       }
-      this.BackMouseButton._visible = this.SelectMouseButton._visible = this.iPlatform == SaveLoadPanel.CONTROLLER_PC;
-      this.BackGamepadButton._visible = this.SelectGamepadButton._visible = this.iPlatform != SaveLoadPanel.CONTROLLER_PC;
+      if(this.BackMouseButton._visible || this.BackGamepadButton._visible)
+      {
+         this.BackMouseButton._visible = this.SelectMouseButton._visible = this.iPlatform == SaveLoadPanel.CONTROLLER_PC || this.iPlatform == SaveLoadPanel.CONTROLLER_NX_MOUSE;
+         this.BackGamepadButton._visible = this.SelectGamepadButton._visible = this.iPlatform != SaveLoadPanel.CONTROLLER_PC && this.iPlatform != SaveLoadPanel.CONTROLLER_NX_MOUSE;
+      }
       if(this.IsPlatformSony())
       {
          this.ScreenshotHolder._visible = false;
@@ -148,7 +154,7 @@ class SaveLoadPanel extends MovieClip
          _loc4_ = this.SaveLoadList_mc.entryList[this.SaveLoadList_mc.selectedIndex];
          if(_loc4_ != undefined)
          {
-            if(this.iPlatform != 0)
+            if(this.iPlatform != 0 && this.iPlatform != 7)
             {
                this.SaveLoadList_mc.selectedIndex = 0;
             }
@@ -177,7 +183,7 @@ class SaveLoadPanel extends MovieClip
    }
    function ShowSelectionButtons(show)
    {
-      if(this.iPlatform == SaveLoadPanel.CONTROLLER_PC)
+      if(this.iPlatform == SaveLoadPanel.CONTROLLER_PC || this.iPlatform == SaveLoadPanel.CONTROLLER_NX_MOUSE)
       {
          this.SelectMouseButton._visible = this.BackMouseButton._visible = show;
       }
@@ -232,15 +238,18 @@ class SaveLoadPanel extends MovieClip
    }
    function PrepScreenshot()
    {
-      clearInterval(this.iScreenshotTimerID);
-      this.iScreenshotTimerID = undefined;
-      if(this.bSaving)
+      if(this.SaveLoadList_mc.length > 0)
       {
-         gfx.io.GameDelegate.call("PrepSaveGameScreenshot",[this.SaveLoadList_mc.selectedIndex - 1,this.SaveLoadList_mc.selectedEntry]);
-      }
-      else
-      {
-         gfx.io.GameDelegate.call("PrepSaveGameScreenshot",[this.SaveLoadList_mc.selectedIndex,this.SaveLoadList_mc.selectedEntry]);
+         clearInterval(this.iScreenshotTimerID);
+         this.iScreenshotTimerID = undefined;
+         if(this.bSaving)
+         {
+            gfx.io.GameDelegate.call("PrepSaveGameScreenshot",[this.SaveLoadList_mc.selectedIndex - 1,this.SaveLoadList_mc.selectedEntry]);
+         }
+         else
+         {
+            gfx.io.GameDelegate.call("PrepSaveGameScreenshot",[this.SaveLoadList_mc.selectedIndex,this.SaveLoadList_mc.selectedEntry]);
+         }
       }
    }
    function ShowScreenshot()
@@ -314,7 +323,7 @@ class SaveLoadPanel extends MovieClip
          }
       }
       this.SaveLoadList_mc.InvalidateData();
-      if(this.iPlatform != 0)
+      if(this.iPlatform != 0 && this.iPlatform != 7)
       {
          this.onSaveLoadItemHighlight({index:this.LastSelectedIndexMemory});
          this.SaveLoadList_mc.selectedIndex = this.LastSelectedIndexMemory;
