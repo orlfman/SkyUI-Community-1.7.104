@@ -32,9 +32,9 @@ For the code-level details, see [the port notes](PORT-1.7.104.md).
 
 ## Testing
 
-I've used this on Skyrim 1.7.104 with SKSE 2.3.1 through MO2 on Linux with Proton. The menus I tried looked right, loading and saving worked, and the session logs showed SkyUI starting up without a recorded crash.
+I've used this on Skyrim 1.7.104 with SKSE 2.3.1 through MO2 on Linux with Proton. The menus I tried looked right, MCN, loading and saving worked, and the session logs showed SkyUI starting up without a recorded crash.
 
-That's a test on one setup. Gamepad controls, a fresh New Game, and the MCM contents haven't been checked separately. Windows hasn't been tested here, and I haven't tested older Skyrim versions or VR.
+That's a test on one setup. Gamepad controls haven't been checked separately.
 
 If something looks wrong, [open an issue](https://github.com/orlfman/SkyUI-Community-1.7.104/issues) with your Skyrim and SKSE versions, the menu involved, and any other UI mods you use. A screenshot and steps to reproduce it help.
 
